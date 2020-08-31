@@ -23,6 +23,7 @@ class ExperimentSettings {
       this.isAuxRecording = isAuxRecording;
   }
 
+  // Getters and setters for low/high voltage to ensure that low voltage is always lower than high voltage
   double get highVoltage {
     return _highVoltage;
   }
@@ -55,15 +56,16 @@ class ExperimentSettings {
   // toString formats like a csv file for ease of writing to file
   @override
   String toString () {
-    String firstRow = 'initialVoltage,highVoltage,lowVoltage,finalVoltage,polarityToggle,scanRate,sweepSegs,sampleInterval,isAutoSens,isFinalE,isAuxRecording\n';
+    String firstRow = 'initialVoltage,highVoltage,lowVoltage,finalVoltage,polarityToggle,scanRate,sweepSegments,sampleInterval,isAutoSens,isFinalE,isAuxRecording\n';
     String secondRow = _initialVoltage.toString() + ',' + highVoltage.toString() + ',' + lowVoltage.toString() + ',' + finalVoltage.toString() + ',' 
-                      + (isPositivePolarity ? 'Positive' : 'Negative') + ',' + isAutoSens.toString() + ',' + isFinalE.toString() + ',' + isAuxRecording.toString();
+                      + (isPositivePolarity ? 'Positive' : 'Negative') + ',' + scanRate.toString() + ',' + sweepSegments.toString() + ',' + sampleInterval.toString() +',' + isAutoSens.toString() + ',' + isFinalE.toString() + ',' + isAuxRecording.toString();
     return firstRow + secondRow;
   }
 
   /*
     Method writes current object to file on device
     source: https://pub.dev/packages/path_provider
+    TODO: testing saving and time it takes to save
   */
   void writeToFile (String fileName) async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
