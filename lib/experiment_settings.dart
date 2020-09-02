@@ -5,22 +5,35 @@ import 'dart:io';
 class ExperimentSettings {
   double _initialVoltage, _highVoltage, _lowVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval;
   bool isAutoSens, isFinalE, isAuxRecording, isPositivePolarity;
+  String projectName, projectDescription;
 
-  ExperimentSettings({initialVoltage=0.0, highVoltage=0.01, lowVoltage=0.0, finalVoltage=0.0, scanRate=0.0, 
-                      sweepSegments=0.0, sampleInterval=0.0, isAutoSens=false, isFinalE=false,
-                      isAuxRecording=false}){
-      if (highVoltage <= lowVoltage) throw new VoltageException();
-      this.isPositivePolarity = initialVoltage >= 0.0 ? true : false;
-      _initialVoltage = initialVoltage;
-      _highVoltage = highVoltage;
-      _lowVoltage = lowVoltage;
-      this.finalVoltage = finalVoltage;
-      this.scanRate = scanRate;
-      this.sweepSegments = sweepSegments;
-      this.sampleInterval = sampleInterval;
-      this.isAutoSens = isAutoSens;
-      this.isFinalE = isFinalE;
-      this.isAuxRecording = isAuxRecording;
+  ExperimentSettings(
+      {initialVoltage = 0.0,
+        highVoltage = 0.01,
+        lowVoltage = 0.0,
+        finalVoltage = 0.0,
+        scanRate = 0.0,
+        sweepSegments = 0.0,
+        sampleInterval = 0.0,
+        isAutoSens = false,
+        isFinalE = false,
+        isAuxRecording = false,
+        projectName = "Experiment_1",
+        projectDescription = "An experiment!"}) {
+    if (highVoltage <= lowVoltage) throw new VoltageException();
+    this.isPositivePolarity = initialVoltage >= 0.0 ? true : false;
+    _initialVoltage = initialVoltage;
+    _highVoltage = highVoltage;
+    _lowVoltage = lowVoltage;
+    this.finalVoltage = finalVoltage;
+    this.scanRate = scanRate;
+    this.sweepSegments = sweepSegments;
+    this.sampleInterval = sampleInterval;
+    this.isAutoSens = isAutoSens;
+    this.isFinalE = isFinalE;
+    this.isAuxRecording = isAuxRecording;
+    this.projectName = projectName;
+    this.projectDescription = projectDescription;
   }
 
   // Getters and setters for low/high voltage to ensure that low voltage is always lower than high voltage
@@ -28,7 +41,7 @@ class ExperimentSettings {
     return _highVoltage;
   }
 
-  set highVoltage (double volt) {
+  set highVoltage(double volt) {
     if (volt <= _lowVoltage) throw new VoltageException();
     _highVoltage = volt;
   }
@@ -37,13 +50,13 @@ class ExperimentSettings {
     return _lowVoltage;
   }
 
-  set lowVoltage (double volt) {
+  set lowVoltage(double volt) {
     if (volt > _highVoltage) throw new VoltageException();
     _lowVoltage = volt;
   }
 
   // Whenever initialVoltage is set, determine is polarity positive or negative
-  set initialVoltage (double volt) {
+  set initialVoltage(double volt) {
     this.isPositivePolarity = volt >= 0.0 ? true : false;
     this._initialVoltage = volt;
   }
@@ -55,10 +68,30 @@ class ExperimentSettings {
 
   // toString formats like a csv file for ease of writing to file
   @override
-  String toString () {
-    String firstRow = 'initialVoltage,highVoltage,lowVoltage,finalVoltage,polarityToggle,scanRate,sweepSegments,sampleInterval,isAutoSens,isFinalE,isAuxRecording\n';
-    String secondRow = _initialVoltage.toString() + ',' + highVoltage.toString() + ',' + lowVoltage.toString() + ',' + finalVoltage.toString() + ',' 
-                      + (isPositivePolarity ? 'Positive' : 'Negative') + ',' + scanRate.toString() + ',' + sweepSegments.toString() + ',' + sampleInterval.toString() +',' + isAutoSens.toString() + ',' + isFinalE.toString() + ',' + isAuxRecording.toString();
+  String toString() {
+    String firstRow =
+        'initialVoltage,highVoltage,lowVoltage,finalVoltage,polarityToggle,scanRate,sweepSegments,sampleInterval,isAutoSens,isFinalE,isAuxRecording\n';
+    String secondRow = _initialVoltage.toString() +
+        ',' +
+        highVoltage.toString() +
+        ',' +
+        lowVoltage.toString() +
+        ',' +
+        finalVoltage.toString() +
+        ',' +
+        (isPositivePolarity ? 'Positive' : 'Negative') +
+        ',' +
+        scanRate.toString() +
+        ',' +
+        sweepSegments.toString() +
+        ',' +
+        sampleInterval.toString() +
+        ',' +
+        isAutoSens.toString() +
+        ',' +
+        isFinalE.toString() +
+        ',' +
+        isAuxRecording.toString();
     return firstRow + secondRow;
   }
 
@@ -67,20 +100,25 @@ class ExperimentSettings {
     source: https://pub.dev/packages/path_provider
     TODO: testing saving and time it takes to save
   */
-  void writeToFile (String fileName) async {
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    Directory experimentDir = Directory(appDocDir.path+'/experiment_directory/');
-    if (!await experimentDir.exists()){
-      experimentDir = await experimentDir.create();
-    }
-    
-    File experimentFile = new File(experimentDir.path + '/' + fileName + '.csv');
-    await experimentFile.writeAsString(this.toString());
-  }
+  Future<bool> writeToFile() async {
+    try {
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      Directory experimentDir = Directory(appDocDir.path + '/experiment_directory/${this.projectName}');
+      if (!await experimentDir.exists()) {
+        experimentDir = await experimentDir.create();
+      }
 
+      File experimentFile = new File(experimentDir.path + '/' + '${this.projectName}_config' + '.csv');
+      await experimentFile.writeAsString(this.toString());
+      return true;
+    } catch(IOException) {
+      print("Fail to save file!");
+      return false;
+    }
+  }
 }
 
 // Exception thrown when low voltage >= high voltage
-class VoltageException implements Exception { 
-   String errMsg() => 'Low Voltage must be less than High Voltage'; 
-}  
+class VoltageException implements Exception {
+  String errMsg() => 'Low Voltage must be less than High Voltage';
+}

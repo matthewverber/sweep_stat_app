@@ -1,39 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:permission_handler/permission_handler.dart';
-
-const Set<String> EXPECTED_SETTINGS = {
-  "initalVoltage",
-  "highVoltage",
-  "lowVoltage",
-  "finalVoltage",
-  "polarity",
-  "scanRate",
-  "sweepSegments",
-  "smapleInterval",
-  "autoSens", // TODO: This might be optional
-  "finalE", // TODO: This might be optional
-  "auxRecord", // TODO: This might be optional
-};
-
-const Map<String, Type> EXPECTED_SETTINGS_TYPE = {
-  "initalVoltage": double,
-  "highVoltage": double,
-  "lowVoltage": double,
-  "finalVoltage": double,
-  "polarity": bool,
-  "scanRate": double,
-  "sweepSegments": double,
-  "smapleInterval": double,
-  "autoSens": bool, // TODO: This might be optional
-  "finalE": bool, // TODO: This might be optional
-  "auxRecord": bool // TODO: This might be optional
-};
+import 'package:sweep_stat_app/experiment_settings.dart';
 
 class FileNamePopup extends StatefulWidget {
+  // TODO: Might not be needed since we are getting a project name and can have a generic _config _experiment
   final Function onSave;
 
   FileNamePopup({Key key, this.onSave}) : super(key: key);
@@ -88,33 +61,33 @@ class _FileNamePopupState extends State<FileNamePopup> {
           child: Column(
             children: [
               TextFormField(
-                controller: _textController,
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  labelText: "File Name",
-                ),
-                validator: (String newText) {
-                  if (newText.isNotEmpty) {
-                    return null;
-                  } else {
-                    return "Can't have an empty file name!";
-                  }
-                },
-              ),
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    labelText: "File Name",
+                  ),
+                  validator: (String newText) {
+                    if (newText.isNotEmpty) {
+                      return null;
+                    } else {
+                      return "Can't have an empty file name!";
+                    }
+                  },
+                  onSaved: (String fileName) {
+                    Future<bool> saved = widget.onSave(_textController.value.toString());
+                    saved.then((bool didSave) {
+                      setState(() {
+                        saving = false;
+                        saveStatus = didSave;
+                      });
+                    });
+                    setState(() {
+                      saving = true;
+                    });
+                  }),
               RaisedButton(
                   onPressed: () {
                     if (_formKey.currentState.validate()) {
-                      Future<bool> saved =
-                      widget.onSave(_textController.value.toString());
-                      saved.then((bool didSave) {
-                        setState(() {
-                          saving = false;
-                          saveStatus = didSave;
-                        });
-                      });
-                      setState(() {
-                        saving = true;
-                      });
+                      _formKey.currentState.save();
                     }
                   },
                   child: Text("Save"))
@@ -126,13 +99,53 @@ class _FileNamePopupState extends State<FileNamePopup> {
   }
 }
 
+class ExperimentSettingsValues extends StatelessWidget {
+  final ExperimentSettings settings;
+
+  const ExperimentSettingsValues({Key key, this.settings}) : super(key: key);
+
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [Text("Initial Voltage: ${settings.initialVoltage} V"), Text("High Voltage: ${settings.highVoltage} V")],
+        ),
+        Row(
+          children: [
+            Text("Low Voltage: ${settings.lowVoltage} V"),
+            Text("Final Voltage: ${settings.finalVoltage} V"),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Initial Polarity: ${settings.isPositivePolarity ? "Positive" : "Negative"}"),
+            Text("Scan Rate: ${settings.scanRate} V/s"),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Sweep Segments: ${settings.sweepSegments}"),
+            Text("Sample Interval: ${settings.sampleInterval} V"),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Sensitivity: ${settings.isAutoSens}"),
+            Text("Final Voltage Enabled: ${settings.isFinalE}"),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class AnalysisScreen extends StatefulWidget {
   /*
     It seems like everything is through shared preferences
   */
-  final SharedPreferences prefs;
+  final ExperimentSettings settings;
 
-  const AnalysisScreen({Key key, this.prefs}) : super(key: key);
+  const AnalysisScreen({Key key, this.settings}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -140,121 +153,31 @@ class AnalysisScreen extends StatefulWidget {
   }
 }
 
-Widget EnabledSettings(settings) {
-  return Column(
-    children: [
-      Row(
-        children: [
-          Text("Initial Voltage: ${settings["initalVoltage"]} V"),
-          Text("High Voltage: ${settings["highVoltage"]} V")
-        ],
-      ),
-      Row(
-        children: [
-          Text("Low Voltage: ${settings["lowVoltage"]} V"),
-          Text("Final Voltage: ${settings["finalVoltage"]} V"),
-        ],
-      ),
-      Row(
-        children: [
-          Text(
-              "Initial Polarity: ${settings["polarity"] ? "Positive" : "Negative"}"),
-          Text("Scan Rate: ${settings["scanRate"]} V/s"),
-        ],
-      ),
-      Row(
-        children: [
-          Text("Sweep Segments: ${settings["sweepSegments"]}"),
-          Text("Sample Interval: ${settings["sampleInterval"]} V"),
-        ],
-      ),
-      Row(
-        children: [
-          Text("Sensitivity: ????"),
-          Text("Final Voltage: ?????"),
-        ],
-      ),
-    ],
-  );
-}
-
 class _AnalysisScreenState extends State<AnalysisScreen> {
-  Map<String, dynamic> settings;
-  List<DataPoints> data = [];
+  List<DataPoints> experimentData = [];
 
-  dynamic getPrefType(SharedPreferences prefs, String setting, Type type) {
-    switch (type) {
-      case bool:
-        {
-          try {
-            return prefs.getBool(setting);
-          } catch (FormatException) {
-            print("There was an error parsing $setting");
-            print("The raw value of $setting was ${prefs.get(setting)}");
-            return null;
-          }
-        }
-        break;
-      case double:
-        {
-          try {
-            return prefs.getDouble(setting);
-          } catch (FormatException) {
-            print("There was an error parsing $setting");
-            print("The raw value of $setting was ${prefs.get(setting)}");
-          }
-        }
-        break;
-    }
-  }
-
-  Map<String, dynamic> parsePrefs(SharedPreferences prefs) {
-    Set<String> settingsInStorage = prefs.getKeys();
-    Map<String, dynamic> settingsBuilder = {};
-    if (settingsInStorage.difference(EXPECTED_SETTINGS).isNotEmpty) {
-      // TODO: Error handling
-      // If you get here, there are settings missing
-      print("Missing settings!");
-      print('${settingsInStorage.difference(EXPECTED_SETTINGS)}');
-    } else {
-      for (int i = 0; i < EXPECTED_SETTINGS.length; i++) {
-        String currentSetting = EXPECTED_SETTINGS.elementAt(i);
-        settingsBuilder[EXPECTED_SETTINGS.elementAt(i)] = getPrefType(
-            prefs, currentSetting, EXPECTED_SETTINGS_TYPE[currentSetting]);
-      }
-      return settingsBuilder;
-    }
-  }
-
-  @override
-  void initState() {
-    if (widget.prefs != null) {
-      settings = parsePrefs(widget.prefs);
-      print(settings);
-    }
-    super.initState();
-  }
-
-  Future<bool> saveLocally(String fileName) async {
+  Future<bool> saveLocally() async {
     // TODO
+    bool savedConfig = await widget.settings.writeToFile();
+    // TODO: Write to file the data
     return true;
   }
 
   int i = 0; // TODO: temp remove, later
   Widget build(BuildContext context) {
-    List<charts.Series<DataPoints, num>> chartSeries = [
+    List<charts.Series<DataPoints, num>> experimentChart = [
       new charts.Series<DataPoints, double>(
-        id: 'Sales',
-        domainFn: (DataPoints sales, _) => sales.x,
-        measureFn: (DataPoints sales, _) => sales.y,
-        data: data,
+        id: 'potential_vs_current',
+        domainFn: (DataPoints data, _) => data.x,
+        measureFn: (DataPoints data, _) => data.y,
+        data: experimentData,
       )
     ];
     return Scaffold(
         body: Column(
           children: [
-            Expanded(child: charts.LineChart(chartSeries, animate: true)),
-            EnabledSettings(settings),
+            Expanded(child: charts.LineChart(experimentChart, animate: true)),
+            EnabledSettings(widget.settings),
             Row(
               children: [
                 RaisedButton(
@@ -266,7 +189,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     child: Text("Run Experiment"),
                     onPressed: () {
                       setState(() {
-                        data.add(new DataPoints(i + 1.0, sin(i + 1.0)));
+                        experimentData.add(new DataPoints(i + 1.0, sin(i + 1.0)));
                         i += 1;
                       });
                     })
@@ -277,20 +200,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     onPressed: () async {
                       // showDialog
-                      PermissionStatus canSave = await Permission.storage.status;
-                      if (!canSave.isGranted) {
-                        PermissionStatus isGranted =
-                        await Permission.storage.request();
-                        if (!isGranted.isGranted) {
-                          // We asked for storage and they denied
-                          // okay, so just exit
-                          return;
-                        }
-                      }
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) =>
-                              FileNamePopup(onSave: saveLocally));
+                      showDialog(context: context, builder: (BuildContext context) => FileNamePopup(onSave: saveLocally));
                     },
                     child: Text("Save Locally")),
                 RaisedButton(onPressed: () {}, child: Text("Export"))
