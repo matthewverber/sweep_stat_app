@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'experiment_settings.dart';
+import 'dart:io';
 
 // NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
 void main() {
@@ -51,6 +53,50 @@ class _SetupFormState extends State<SetupForm> {
     new CheckInput(text: 'isAuxRecording', callback: (bool v)=>{experimentSettings.isAuxRecording=v})
   ];
 
+  // Method for loading variables in experimentSettings
+  // Returns true if inputs valid, false if not
+  bool _loadVariables() {
+    // First validate that value inputs are all doubles
+    if (_formKey.currentState.validate()){
+        // If value inputs are doubles, load them into the Experiment Settings with save
+        _formKey.currentState.save();
+        if (experimentSettings.lowVoltage >= experimentSettings.highVoltage){
+          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Low Voltage must be less than high voltage')));
+        } else {
+          print(experimentSettings);
+          return true;
+        }
+    }
+    return false;
+  }
+
+  // Note: much of this from following tutorial: https://www.youtube.com/watch?v=FGfhnS6skMQ&ab_channel=RetroPortalStudio
+  // Method for creating the Dialog allowing a user to input a file name
+  Future<String> _showFileDialog (BuildContext context){
+    TextEditingController controller = new TextEditingController();
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter File Name'),
+          content: TextField(controller: controller),
+          actions: [
+            MaterialButton(
+              child: Text('Save'),
+              onPressed: (){
+                Navigator.of(context).pop(controller.text.toString());
+              },
+            ),
+            MaterialButton(
+              child: Text('Cancel'),
+              onPressed: (){
+                Navigator.of(context).pop();
+              },)
+          ],
+        );
+      });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -59,20 +105,40 @@ class _SetupFormState extends State<SetupForm> {
         children: <Widget>[
           ...inputs,
           RaisedButton(
-            onPressed: () {
-              // First validate that value inputs are all doubles
-              if (_formKey.currentState.validate()){
-                try {
-                  // If value inputs are doubles, load them into the Experiment Settings with save
-                  _formKey.currentState.save();
-                  print(experimentSettings);
-                }catch (e){
-                  // Mainly used for is lowVoltage > highVoltage (VoltageException)
-                  Scaffold.of(context).showSnackBar(SnackBar(content: Text(e.errMsg())));
+            onPressed: _loadVariables,
+            child: Text('Run Test'),),
+          RaisedButton(
+            onPressed: () async{
+              // if inputs valid
+              if(_loadVariables()){
+                // Get name from a dialog box
+                String name = await _showFileDialog(context);
+                // Make sure name is valid
+                if (name != null){
+                  // Write to file and alert user using experimentSettings' writeToFile
+                  if (await experimentSettings.writeToFile(name)){
+                    Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
+                  } else {
+                    // If false returned, file already exists
+                    Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' already exists')));
+                  }  
                 }
               }
             },
-            child: Text('Run Test'),)
+            child: Text('Save')),
+          // Button for testing if files saved correctly, to be deleted
+          RaisedButton(
+            onPressed: () async {
+              Directory appDocDir = await getApplicationDocumentsDirectory();
+              Directory experimentDir = Directory(appDocDir.path+'/experiment_settings/');
+              experimentDir.list(recursive: true, followLinks: false)
+                .listen((FileSystemEntity entity) {
+                  if(entity is File){
+                    print(entity.readAsStringSync());
+                  }
+                });
+            },
+            child: Text('Check files'),)
         ]
       ),
     );
