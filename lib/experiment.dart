@@ -1,6 +1,56 @@
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
+class Experiment {
+  final ExperimentSettings settings;
+  List<DataPoints> data = [new DataPoints(0.0, 0.0)];
+  Directory experimentDir;
+
+  Experiment(this.settings);
+
+  Future<Directory> getOrCreateCurrentDirectory() async {
+    if (experimentDir == null) {
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      experimentDir = Directory(appDocDir.path + '/experiment_directory/${this.settings.projectName}');
+    }
+    if (!await experimentDir.exists()) {
+      experimentDir = await experimentDir.create(recursive: true);
+    }
+    return experimentDir;
+  }
+
+  Future<bool> saveData() async {
+    try {
+      Directory projectDir = await this.getOrCreateCurrentDirectory();
+      List<String> dataToString = data.map((dataPoint) => "${dataPoint.potential}, ${dataPoint.current}").toList();
+      dataToString.insert(0, "potential, current");
+      File experimentFile = new File(projectDir.path + '/' + '${this.settings.projectName}_data' + '.csv');
+      await experimentFile.writeAsString(dataToString.join("\n"));
+      return true;
+    } catch (IOException) {
+      return false;
+    }
+  }
+
+  Future<bool> saveConfig() async {
+    Directory projectDir = await this.getOrCreateCurrentDirectory();
+    return this.settings.writeToFile(projectDir);
+  }
+
+  saveExperiment() async {
+    bool savedData = await saveData();
+    bool savedConfig = await saveConfig();
+    return savedData && savedConfig;
+  }
+}
+
+class DataPoints {
+  final double potential;
+  final double current;
+
+  DataPoints(this.potential, this.current);
+}
+
 // A class for holding experiment settings variables
 class ExperimentSettings {
   double _initialVoltage, _highVoltage, _lowVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval;
@@ -100,18 +150,13 @@ class ExperimentSettings {
     source: https://pub.dev/packages/path_provider
     TODO: testing saving and time it takes to save
   */
-  Future<bool> writeToFile() async {
+  Future<bool> writeToFile(Directory experimentDir) async {
     try {
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      Directory experimentDir = Directory(appDocDir.path + '/experiment_directory/${this.projectName}');
-      if (!await experimentDir.exists()) {
-        experimentDir = await experimentDir.create();
-      }
-
       File experimentFile = new File(experimentDir.path + '/' + '${this.projectName}_config' + '.csv');
       await experimentFile.writeAsString(this.toString());
       return true;
-    } catch(IOException) {
+    } catch (IOException) {
+      print(IOException.toString());
       print("Fail to save file!");
       return false;
     }

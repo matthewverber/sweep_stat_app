@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sweep_stat_app/analysis.dart';
-import 'experiment_settings.dart';
+import 'experiment.dart';
 
 final INVALID_FILE_NAME_CHARACTERS = new RegExp("|\\?*<\":>+[]/';");
 
@@ -46,7 +46,8 @@ class _SetupFormState extends State<SetupForm> {
               try {
                 // If value inputs are doubles, load them into the Experiment Settings with save
                 _formKey.currentState.save();
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => AnalysisScreen(settings: experimentSettings)));
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (BuildContext context) => AnalysisScreen(experiment: Experiment(experimentSettings))));
               } catch (e) {
                 // Mainly used for is lowVoltage > highVoltage (VoltageException)
                 Scaffold.of(context).showSnackBar(SnackBar(content: Text(e.errMsg())));

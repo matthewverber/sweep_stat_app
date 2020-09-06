@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sweep_stat_app/analysis.dart';
+import 'package:sweep_stat_app/experiment.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,35 +47,31 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RaisedButton(
-        onPressed: () async {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          Map<String, dynamic> testValues = {
-            "initalVoltage": 0.0,
-            "highVoltage": 5.0,
-            "lowVoltage": 0.0,
-            "finalVoltage": 5.0,
-            "polarity": false,
-            "scanRate": .05,
-            "sweepSegments": .05,
-            "smapleInterval": 5.0,
-          };
-          // TODO: Move to tests
-          for (int i = 0; i < testValues.length; i++) {
-            if (testValues.keys.elementAt(i) == "polarity") {
-              prefs.setBool(testValues.keys.elementAt(i),
-                  testValues[testValues.keys.elementAt(i)]);
-            } else {
-              prefs.setDouble(testValues.keys.elementAt(i),
-                  testValues[testValues.keys.elementAt(i)]);
-            }
-          }
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (BuildContext context) =>
-                      AnalysisScreen(prefs: prefs)));
-        },
+      body: SafeArea(
+        child: RaisedButton(
+          onPressed: () async {
+            ExperimentSettings testValues = ExperimentSettings(
+              initialVoltage: 0.0,
+              highVoltage: 5.0,
+              lowVoltage: 0.0,
+              finalVoltage: 5.0,
+              scanRate: .05,
+              sweepSegments: .05,
+              sampleInterval: 5.0,
+              isAutoSens: false,
+              isFinalE: false,
+              isAuxRecording: false,
+              projectName: "OmegaTest",
+              projectDescription: "None"
+            );
+            // TODO: Move to tests
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        AnalysisScreen(experiment: Experiment(testValues))));
+          },
+        ),
       ),
     );
   }

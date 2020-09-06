@@ -1,12 +1,16 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:permission_handler/permission_handler.dart';
-import 'package:sweep_stat_app/experiment_settings.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share/share.dart';
+import 'package:sweep_stat_app/experiment.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class FileNamePopup extends StatefulWidget {
-  // TODO: Might not be needed since we are getting a project name and can have a generic _config _experiment
+  // TODO: Might not be needed since we are getting a project name and can have a generic _config _experimentube
+
   final Function onSave;
 
   FileNamePopup({Key key, this.onSave}) : super(key: key);
@@ -143,9 +147,9 @@ class AnalysisScreen extends StatefulWidget {
   /*
     It seems like everything is through shared preferences
   */
-  final ExperimentSettings settings;
+  final Experiment experiment;
 
-  const AnalysisScreen({Key key, this.settings}) : super(key: key);
+  const AnalysisScreen({Key key, this.experiment}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -154,66 +158,115 @@ class AnalysisScreen extends StatefulWidget {
 }
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
-  List<DataPoints> experimentData = [];
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  // TODO: Move spots to Experiment class !
+  List<FlSpot> spots = [new FlSpot(0, 0)];
+  List<FlSpot> spotstwo = [new FlSpot(0, 0)];
+  LineChartBarData dataone;
+  LineChartBarData datatwo;
 
   Future<bool> saveLocally() async {
-    // TODO
-    bool savedConfig = await widget.settings.writeToFile();
-    // TODO: Write to file the data
-    return true;
+    return await widget.experiment.saveExperiment();
   }
+
+  Future<bool> shareFiles() async {
+    bool didSave = await saveLocally();
+    if (didSave) {
+      Directory experimentDir = await widget.experiment.getOrCreateCurrentDirectory();
+      Share.shareFiles([
+        '${experimentDir.path}/${widget.experiment.settings.projectName}_config.csv',
+        '${experimentDir.path}/${widget.experiment.settings.projectName}_data.csv'
+      ]);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void initState() {
+    dataone = LineChartBarData(spots: spots, isCurved: true);
+    datatwo = LineChartBarData(spots: spotstwo, isCurved: true);
+    super.initState();
+  }
+
+  bool lock = false;
 
   int i = 0; // TODO: temp remove, later
   Widget build(BuildContext context) {
-    List<charts.Series<DataPoints, num>> experimentChart = [
-      new charts.Series<DataPoints, double>(
-        id: 'potential_vs_current',
-        domainFn: (DataPoints data, _) => data.x,
-        measureFn: (DataPoints data, _) => data.y,
-        data: experimentData,
-      )
-    ];
     return Scaffold(
-        body: Column(
-          children: [
-            Expanded(child: charts.LineChart(experimentChart, animate: true)),
-            EnabledSettings(widget.settings),
-            Row(
-              children: [
-                RaisedButton(
-                    child: Text("Back"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    }),
-                RaisedButton(
-                    child: Text("Run Experiment"),
-                    onPressed: () {
-                      setState(() {
-                        experimentData.add(new DataPoints(i + 1.0, sin(i + 1.0)));
-                        i += 1;
-                      });
-                    })
-              ],
-            ),
-            Row(
-              children: [
-                RaisedButton(
-                    onPressed: () async {
-                      // showDialog
-                      showDialog(context: context, builder: (BuildContext context) => FileNamePopup(onSave: saveLocally));
-                    },
-                    child: Text("Save Locally")),
-                RaisedButton(onPressed: () {}, child: Text("Export"))
-              ],
-            )
-          ],
+        key: _scaffoldKey,
+        body: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16.0, left: 0),
+                  child: LineChart(LineChartData(
+                      lineBarsData: [dataone, datatwo],
+                      axisTitleData: FlAxisTitleData(
+                          show: true,
+                          leftTitle: AxisTitle(titleText: "Current i (AM)"),
+                          bottomTitle: AxisTitle(titleText: "Potential E (V)"),
+                          topTitle: AxisTitle(titleText: "Currnt Vs Potential"),
+                          rightTitle: AxisTitle(titleText: "")))),
+                ),
+              ),
+              ExperimentSettingsValues(settings: widget.experiment.settings),
+              Row(
+                children: [
+                  RaisedButton(
+                      child: Text("Back"),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      }),
+                  RaisedButton(
+                      child: Text("Run Experiment"),
+                      onPressed: () {
+                        Timer.periodic(new Duration(milliseconds: 50), (timer) {
+                          setState(() {
+                            spots.add(new FlSpot(i + 0.0, 3 * sin(i + 0.0)));
+                            spotstwo.add(new FlSpot(i + 1.0, cos(i + 1.0)));
+                            i += 1;
+                          });
+                        });
+                      })
+                ],
+              ),
+              Row(
+                children: [
+                  RaisedButton(
+                      onPressed: () async {
+                        // showDialod
+                        if (await saveLocally()) {
+                          _scaffoldKey.currentState.showSnackBar(SnackBar(
+                            content: Text("Saved successfully!"),
+                            duration: Duration(seconds: 1),
+                          ));
+                        } else {
+                          _scaffoldKey.currentState.showSnackBar(SnackBar(
+                            content: Text("Failed to save, please try again!"),
+                            duration: Duration(seconds: 1),
+                          ));
+                        }
+                      },
+                      child: Text("Save Locally")),
+                  RaisedButton(
+                      onPressed: () async {
+                        // showDialod
+                        if (!(await shareFiles())) {
+                          _scaffoldKey.currentState.showSnackBar(SnackBar(
+                            content: Text("Failed to save, please try again!"),
+                            duration: Duration(seconds: 3),
+                          ));
+                        }
+                      },
+                      child: Text("Send Data"))
+                ],
+              )
+            ],
+          ),
         ));
   }
-}
-
-class DataPoints {
-  final double x;
-  final double y;
-
-  DataPoints(this.x, this.y);
 }
