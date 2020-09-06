@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share/share.dart';
 import 'package:sweep_stat_app/experiment.dart';
 import 'package:fl_chart/fl_chart.dart';
