@@ -1,9 +1,11 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 class Experiment {
   final ExperimentSettings settings;
-  List<DataPoints> data = [new DataPoints(0.0, 0.0)];
+  List<FlSpot> dataL = [];
+  List<FlSpot> dataR = [];
   Directory experimentDir;
 
   Experiment(this.settings);
@@ -11,7 +13,7 @@ class Experiment {
   Future<Directory> getOrCreateCurrentDirectory() async {
     if (experimentDir == null) {
       Directory appDocDir = await getApplicationDocumentsDirectory();
-      experimentDir = Directory(appDocDir.path + '/experiment_directory/${this.settings.projectName}');
+      experimentDir = Directory(appDocDir.path);
     }
     if (!await experimentDir.exists()) {
       experimentDir = await experimentDir.create(recursive: true);
@@ -19,28 +21,26 @@ class Experiment {
     return experimentDir;
   }
 
-  Future<bool> saveData() async {
+  List<String> dataToString() {
     try {
-      Directory projectDir = await this.getOrCreateCurrentDirectory();
-      List<String> dataToString = data.map((dataPoint) => "${dataPoint.potential}, ${dataPoint.current}").toList();
-      dataToString.insert(0, "potential, current");
-      File experimentFile = new File(projectDir.path + '/' + '${this.settings.projectName}_data' + '.csv');
-      await experimentFile.writeAsString(dataToString.join("\n"));
-      return true;
+      List<FlSpot> dataRCopy = dataR;
+      dataRCopy.insertAll(0, dataL);
+      List<String> stringified = dataRCopy.map((dataPoint) => "${dataPoint.x}, ${dataPoint.y}").toList();
+      stringified.insert(0, "potential, current");
+      return stringified;
     } catch (IOException) {
-      return false;
+      return null;
     }
   }
 
-  Future<bool> saveConfig() async {
-    Directory projectDir = await this.getOrCreateCurrentDirectory();
-    return this.settings.writeToFile(projectDir);
+  String saveConfig() {
+    return this.settings.toString();
   }
 
   saveExperiment() async {
-    bool savedData = await saveData();
-    bool savedConfig = await saveConfig();
-    return savedData && savedConfig;
+    List<String> savedData = dataToString();
+    String config = saveConfig();
+    return savedData != null && config != null;
   }
 }
 

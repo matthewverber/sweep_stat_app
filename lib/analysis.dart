@@ -159,10 +159,8 @@ class AnalysisScreen extends StatefulWidget {
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   // TODO: Move spots to Experiment class !
-  List<FlSpot> spots = [new FlSpot(0, 0)];
-  List<FlSpot> spotstwo = [new FlSpot(0, 0)];
-  LineChartBarData dataone;
-  LineChartBarData datatwo;
+  LineChartBarData data_L;
+  LineChartBarData data_R;
 
   Future<bool> saveLocally() async {
     return await widget.experiment.saveExperiment();
@@ -183,8 +181,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void initState() {
-    dataone = LineChartBarData(spots: spots, isCurved: true);
-    datatwo = LineChartBarData(spots: spotstwo, isCurved: true);
+    data_L = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
+    data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true);
     super.initState();
   }
 
@@ -203,7 +201,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 16.0, left: 0),
                   child: LineChart(LineChartData(
-                      lineBarsData: [dataone, datatwo],
+                      lineBarsData: [data_L, data_R],
                       axisTitleData: FlAxisTitleData(
                           show: true,
                           leftTitle: AxisTitle(titleText: "Current i (AM)"),
@@ -225,8 +223,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       onPressed: () {
                         Timer.periodic(new Duration(milliseconds: 50), (timer) {
                           setState(() {
-                            spots.add(new FlSpot(i + 0.0, 3 * sin(i + 0.0)));
-                            spotstwo.add(new FlSpot(i + 1.0, cos(i + 1.0)));
+                            widget.experiment.dataL.add(new FlSpot(i + 0.0, 3 * sin(i + 0.0)));
+                            widget.experiment.dataR.add(new FlSpot(i + 1.0, cos(i + 1.0)));
                             i += 1;
                           });
                         });
@@ -237,7 +235,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 children: [
                   RaisedButton(
                       onPressed: () async {
-                        // showDialod
                         if (await saveLocally()) {
                           _scaffoldKey.currentState.showSnackBar(SnackBar(
                             content: Text("Saved successfully!"),
