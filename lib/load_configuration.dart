@@ -30,8 +30,22 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class LoadConfig extends StatelessWidget {
+class LoadConfig extends StatefulWidget {
+  const LoadConfig({Key key}) : super(key: key);
+  @override
+  _LoadConfigState createState() => _LoadConfigState();
+}
 
+class _LoadConfigState extends State<LoadConfig> {
+
+  Future<List<File>> files;
+  bool isDeleting = false;
+
+  initState() {
+    super.initState();
+    files = _loadConfigs();
+  }
+  
   Future<List<File>> _loadConfigs() async {    
     // Load config directory
     Directory appDir = await getApplicationDocumentsDirectory();
@@ -43,57 +57,78 @@ class LoadConfig extends StatelessWidget {
     }
 
     // Get the list of files within the directory and add to fileNames
-    List<File> files = [];
+    List<File> returnFiles = [];
     List<FileSystemEntity> items = configDir.listSync(recursive: false);
     for (FileSystemEntity f in items){
       if (f is File){
-        files.add(f);
+        returnFiles.add(f);
       }
     }
-    return files;
-    // Load filenames from file objects
-    /*
-    configFiles.forEach((File f){
-      fileNames.add(f.path);
-    });*/
+    return returnFiles;
   }
 
-  void passData(File f, BuildContext context){
-    Navigator.push(
+  // Delete a file
+  // TODO: Make efficient?
+  Future<bool> _deleteFile(File f) async {
+    try {
+      await f.delete();
+      setState((){
+        files = _loadConfigs();
+      });
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  void passData(File f, BuildContext context) async{
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => AdvancedSetup(f),
       )
     );
+    setState(() {
+      files = _loadConfigs();
+    });
   }
 
   @override 
   Widget build(BuildContext context){
     return FutureBuilder<List<File>>(
-      future: _loadConfigs(),
+      future: files,
       builder: (BuildContext context, AsyncSnapshot<List<File>> snapshot){
         List<RaisedButton> children = [];
         if (snapshot.hasData){
           snapshot.data.forEach((File f) {
             children.add(
               RaisedButton(
-                onPressed: ()=>passData(f, context),
+                onPressed: () async{
+                  if (!isDeleting){
+                    passData(f, context);
+                  } else {
+                    String result = await _deleteFile(f) ? "File deleted" : "File could not be deleted";
+                    Scaffold.of(context).showSnackBar(SnackBar(content: Text(result)));
+                  }
+
+                },
                 child: Text(f.path.split('/').last.split('.').first))
             );
           });
         } 
         return ListView(
-          children: children,);
+          children: [
+            Row(children: [
+              Text('Delete'),
+              Switch(value: isDeleting,
+              onChanged: (bool val){
+                setState((){
+                  isDeleting = val;
+                });
+              })
+            ],),
+            ...children],);
       }
     );
   }
 }
-
-/*
-snapshot.data.map((File f)=>{
-            RaisedButton(
-              child: Text(f.path),
-              onPressed: ()=>passData(f),
-            )
-          }).toList();
-          */
