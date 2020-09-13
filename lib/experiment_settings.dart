@@ -33,6 +33,11 @@ class ExperimentSettings {
     return _initialVoltage;
   }
 
+  // Gets the values of the object in a list
+  List getValuesList (){
+    return [_initialVoltage, highVoltage, lowVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval, isAutoSens, isFinalE, isAuxRecording];
+  }
+
   // toString formats like a csv file for ease of writing to file
   @override
   String toString () {
@@ -60,6 +65,22 @@ class ExperimentSettings {
     }
     await experimentFile.writeAsString(this.toString());
     return true;
+  }
+
+  // Load the data from a file into the object synchronously
+  void loadFromFile (File f){
+    String fileData = f.readAsStringSync();
+    List<String> fileInfo = fileData.split('\n')[1].split(',');
+    initialVoltage = double.parse(fileInfo[0]);
+    highVoltage = double.parse(fileInfo[1]);
+    lowVoltage = double.parse(fileInfo[2]);
+    finalVoltage = double.parse(fileInfo[3]);
+    scanRate = double.parse(fileInfo[5]);
+    sweepSegments = double.parse(fileInfo[6]);
+    sampleInterval = double.parse(fileInfo[7]);
+    isAutoSens = fileInfo[8] == 'true';
+    isFinalE = fileInfo[9] == 'true';
+    isAuxRecording = fileInfo[10] == 'true';
   }
 
 }

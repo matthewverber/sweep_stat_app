@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'experiment_settings.dart';
 import 'dart:io';
 
@@ -18,11 +17,19 @@ class MyApp extends StatelessWidget {
       ),
       home: MaterialApp(
         title: 'Advanced Setup',
-        home: Scaffold(
-          appBar: AppBar(title: Text('Advanced Setup')),
-          body: SetupForm(),
-        )
+        home: SetupForm()
       )
+    );
+  }
+}
+
+class AdvancedSetup extends StatelessWidget {
+  final File f;
+  AdvancedSetup([this.f]);
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Advanced Setup')),
+      body: SetupForm(file: f)
     );
   }
 }
@@ -31,7 +38,8 @@ class MyApp extends StatelessWidget {
   SetupForm: The main form for entering/validating data
 */
 class SetupForm extends StatefulWidget {
-  const SetupForm({Key key}) : super(key: key);
+  final File file;
+  const SetupForm({Key key, this.file}) : super(key: key);
   @override
   _SetupFormState createState() => _SetupFormState();
 }
@@ -40,18 +48,41 @@ class _SetupFormState extends State<SetupForm> {
   final _formKey = GlobalKey<FormState>(); // formkey for form
   static ExperimentSettings experimentSettings = new ExperimentSettings(); // ExperimentSettings class to save data
   // List of inputs for each field necessary
-  final List<Widget> inputs = [
-    new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V'),
-    new ValueInput('High Voltage', (double d)=>{experimentSettings.highVoltage=d}, 'V'),
-    new ValueInput('Low Voltage', (double d)=>{experimentSettings.lowVoltage=d}, 'V'),
-    new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V'),
-    new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s'),
-    new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, ''),
-    new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V'),
-    new CheckInput(text: 'isAutoSense', callback: (bool v)=>{experimentSettings.isAutoSens=v}),
-    new CheckInput(text: 'isFinalE', callback: (bool v)=>{experimentSettings.isFinalE=v}),
-    new CheckInput(text: 'isAuxRecording', callback: (bool v)=>{experimentSettings.isAuxRecording=v})
-  ];
+  List inputs;
+
+  @override
+  void initState(){
+    super.initState();
+    if (widget.file != null){
+      experimentSettings.loadFromFile(widget.file);
+      inputs =  [
+        new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V', experimentSettings.initialVoltage.toString()),
+        new ValueInput('High Voltage', (double d)=>{experimentSettings.highVoltage=d}, 'V', experimentSettings.highVoltage.toString()),
+        new ValueInput('Low Voltage', (double d)=>{experimentSettings.lowVoltage=d}, 'V', experimentSettings.lowVoltage.toString()),
+        new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V', experimentSettings.finalVoltage.toString()),
+        new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s', experimentSettings.scanRate.toString()),
+        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, '', experimentSettings.sweepSegments.toString()),
+        new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V', experimentSettings.sampleInterval.toString()),
+        new CheckInput(text: 'isAutoSense', callback: (bool v)=>{experimentSettings.isAutoSens=v}, isChecked: experimentSettings.isAutoSens,),
+        new CheckInput(text: 'isFinalE', callback: (bool v)=>{experimentSettings.isFinalE=v}, isChecked: experimentSettings.isFinalE,),
+        new CheckInput(text: 'isAuxRecording', callback: (bool v)=>{experimentSettings.isAuxRecording=v}, isChecked: experimentSettings.isAuxRecording)
+      ];
+    } else {
+      inputs = [
+        new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V', ''),
+        new ValueInput('High Voltage', (double d)=>{experimentSettings.highVoltage=d}, 'V', ''),
+        new ValueInput('Low Voltage', (double d)=>{experimentSettings.lowVoltage=d}, 'V', ''),
+        new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V', ''),
+        new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s', ''),
+        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, '', ''),
+        new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V', ''),
+        new CheckInput(text: 'isAutoSense', callback: (bool v)=>{experimentSettings.isAutoSens=v}),
+        new CheckInput(text: 'isFinalE', callback: (bool v)=>{experimentSettings.isFinalE=v}),
+        new CheckInput(text: 'isAuxRecording', callback: (bool v)=>{experimentSettings.isAuxRecording=v})
+      ];
+    }
+  }
+
 
   // Method for loading variables in experimentSettings
   // Returns true if inputs valid, false if not
@@ -99,63 +130,63 @@ class _SetupFormState extends State<SetupForm> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.file);
     return Form(
-      key: _formKey,
-      child: ListView(
-        children: <Widget>[
-          ...inputs,
-          RaisedButton(
-            onPressed: _loadVariables,
-            child: Text('Run Test'),),
-          RaisedButton(
-            onPressed: () async{
-              // if inputs valid
-              if(_loadVariables()){
-                // Get name from a dialog box
-                String name = await _showFileDialog(context);
-                // Make sure name is valid
-                if (name != null){
-                  // Write to file and alert user using experimentSettings' writeToFile
-                  if (await experimentSettings.writeToFile(name)){
-                    Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
-                  } else {
-                    // If false returned, file already exists
-                    Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' already exists')));
-                  }  
-                }
-              }
-            },
-            child: Text('Save')),
-          // Button for testing if files saved correctly, to be deleted
-          RaisedButton(
-            onPressed: () async {
-              Directory appDocDir = await getApplicationDocumentsDirectory();
-              Directory experimentDir = Directory(appDocDir.path+'/experiment_settings/');
-              experimentDir.list(recursive: true, followLinks: false)
-                .listen((FileSystemEntity entity) {
-                  if(entity is File){
-                    print(entity.readAsStringSync());
+        key: _formKey,
+        child: ListView(
+          children: <Widget>[
+            ...inputs,
+            RaisedButton(
+              onPressed: _loadVariables,
+              child: Text('Run Test'),),
+            RaisedButton(
+              onPressed: () async{
+                // if inputs valid
+                if(_loadVariables()){
+                  // Get name from a dialog box
+                  String name = await _showFileDialog(context);
+                  // Make sure name is valid
+                  if (name != null){
+                    // Write to file and alert user using experimentSettings' writeToFile
+                    if (await experimentSettings.writeToFile(name)){
+                      Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
+                    } else {
+                      // If false returned, file already exists
+                      Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' already exists')));
+                    }  
                   }
-                });
-            },
-            child: Text('Check files'),)
-        ]
-      ),
-    );
+                }
+              },
+              child: Text('Save')),
+          ]
+        ),
+      );
   }
 }
 
 // Stateful widget for controlling checkboxes
-class CheckInput extends StatefulWidget {
+class CheckInput extends StatefulWidget{
   final String text; // Text to display with checkbox
   final Function callback; // Callback for when checkbox is changed
-  const CheckInput({Key key, @required this.text, @required this.callback}) : super(key: key);
+  final bool isChecked;
+  const CheckInput({Key key, @required this.text, @required this.callback, this.isChecked}) : super(key: key);
   @override
   CheckInputState createState() => CheckInputState();
 }
 
 class CheckInputState extends State<CheckInput> {
-  bool _isChecked = false;
+  
+  bool _isChecked;
+  void initState(){
+    super.initState();
+    _isChecked = widget.isChecked == null ? false : widget.isChecked;
+  }
+
+  setValue (bool isChecked){
+    setState(() {
+      _isChecked = isChecked;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,13 +204,12 @@ class CheckInputState extends State<CheckInput> {
 }
 
 /*
-  Stateless Widget for value inputs
   Validates on formKey.currentState.validate()
   Calls callback with double of input on formKey.currentState.save()
 */
 class ValueInput extends StatelessWidget {
-  ValueInput(this.text, this.callback, this.units);
-  final String text, units; // Text is displayed name, units is the displayed unit val at end
+  ValueInput(this.text, this.callback, this.units, this.value);
+  final String text, units, value; // Text is displayed name, units is the displayed unit val at end
   final Function callback; // Callback called on save
 
   @override
@@ -191,6 +221,7 @@ class ValueInput extends StatelessWidget {
         ),
         Expanded(child: 
           TextFormField(
+            initialValue: value,
             validator: (String value) {
               if (value.isEmpty){
                 return 'Please Enter a Value';
