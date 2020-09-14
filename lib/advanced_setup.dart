@@ -99,6 +99,23 @@ class _SetupFormState extends State<SetupForm> {
     return false;
   }
 
+
+  // Method for saving to new file with dialog box
+  Future<void> _saveNewFile() async{
+    // Get name from a dialog box
+    String name = await _showFileDialog(context);
+     // Make sure name is valid
+    if (name != null){
+    // Write to file and alert user using experimentSettings' writeToFile
+      if (await experimentSettings.writeToFile(name)){
+        Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
+      } else {
+      // If false returned, file already exists
+        Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' already exists')));
+      }  
+    }
+  }
+
   // Note: much of this from following tutorial: https://www.youtube.com/watch?v=FGfhnS6skMQ&ab_channel=RetroPortalStudio
   // Method for creating the Dialog allowing a user to input a file name
   Future<String> _showFileDialog (BuildContext context){
@@ -142,18 +159,7 @@ class _SetupFormState extends State<SetupForm> {
                 // if inputs valid
                 if(_loadVariables()){
                   if (widget.file == null){
-                    // Get name from a dialog box
-                    String name = await _showFileDialog(context);
-                    // Make sure name is valid
-                    if (name != null){
-                      // Write to file and alert user using experimentSettings' writeToFile
-                      if (await experimentSettings.writeToFile(name)){
-                        Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
-                      } else {
-                        // If false returned, file already exists
-                        Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' already exists')));
-                      }  
-                    }
+                    _saveNewFile();
                   } else {
                     if (await experimentSettings.overwriteFile(widget.file)){
                       Scaffold.of(context).showSnackBar(SnackBar(content: Text('Overwrote file')));
@@ -164,50 +170,15 @@ class _SetupFormState extends State<SetupForm> {
                 }
               },
               child: Text('Save')),
+            if (widget.file != null) 
+              RaisedButton(
+                onPressed: _saveNewFile,
+                child: Text('Save as New Config')
+                )
           ]
         ),
       );
   }
-}
-
-
-// Stateful widget for controlling checkboxes
-class CheckInput extends StatefulWidget{
-  final String text; // Text to display with checkbox
-  final Function callback; // Callback for when checkbox is changed
-  final bool isChecked;
-  const CheckInput({Key key, @required this.text, @required this.callback, this.isChecked}) : super(key: key);
-  @override
-  CheckInputState createState() => CheckInputState();
-}
-
-class CheckInputState extends State<CheckInput> {
-  
-  bool _isChecked;
-  void initState(){
-    super.initState();
-    _isChecked = widget.isChecked == null ? false : widget.isChecked;
-  }
-
-  setValue (bool isChecked){
-    setState(() {
-      _isChecked = isChecked;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-     return CheckboxListTile(
-      title: Text(widget.text),
-      value: _isChecked,
-      onChanged: (bool value) {
-        widget.callback(value);
-        setState((){
-          _isChecked = _isChecked ? false : true;
-        });
-      },);
-  }
-
 }
 
 /*
