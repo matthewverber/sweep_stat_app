@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'SweepStat'),
     );
   }
 }
@@ -97,21 +97,96 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
+            /*Text(
               'You have pushed the button this many times:',
             ),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
+            ),*/
+            FlatButton(
+              color: Colors.blue,
+              textColor: Colors.white,
+              disabledColor: Colors.grey,
+              disabledTextColor: Colors.black,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /*...*/
+              },
+              child: Text(
+                "GUIDED SETUP",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            FlatButton(
+              color: Colors.blue,
+              textColor: Colors.white,
+              disabledColor: Colors.grey,
+              disabledTextColor: Colors.black,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /*...*/
+              },
+              child: Text(
+                "ADVANCED SETUP",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            OutlineButton(
+              color: Colors.grey,
+              textColor: Colors.blue,
+              disabledBorderColor: Colors.grey,
+              disabledTextColor: Colors.grey,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /*...*/
+              },
+              child: Text(
+                "RECENT RESULTS",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            OutlineButton(
+              color: Colors.grey,
+              textColor: Colors.blue,
+              disabledBorderColor: Colors.grey,
+              disabledTextColor: Colors.grey,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /*...*/
+              },
+              child: Text(
+                "LOAD CONFIG",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            OutlineButton(
+              color: Colors.grey,
+              textColor: Colors.blue,
+              disabledBorderColor: Colors.grey,
+              disabledTextColor: Colors.grey,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /*...*/
+              },
+              child: Text(
+                "BLUETOOTH CONNECTION",
+                style: TextStyle(fontSize: 20.0),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      /*floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),*/ // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
