@@ -10,16 +10,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Advanced Setup',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.blue,
+          textTheme: ButtonTextTheme.primary
+        )
       ),
-      home: MaterialApp(
-        title: 'Advanced Setup',
-        home: AdvancedSetup()
-      )
+      home: AdvancedSetup()
     );
+
   }
 }
 
@@ -28,7 +30,15 @@ class AdvancedSetup extends StatelessWidget {
   AdvancedSetup([this.f]);
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Advanced Setup')),
+      appBar: AppBar(
+        title: Text('Advanced Setup'),
+        leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: (){
+                  Navigator.pop(context);
+                },
+              )
+        ),
       body: SetupForm(file: f)
     );
   }
@@ -46,31 +56,51 @@ class SetupForm extends StatefulWidget {
 
 class _SetupFormState extends State<SetupForm> {
   final _formKey = GlobalKey<FormState>(); // formkey for form
-  static ExperimentSettings experimentSettings = new ExperimentSettings(); // ExperimentSettings class to save data
+  static VoltammetrySettings experimentSettings = new VoltammetrySettings(); // ExperimentSettings class to save data
   // List of inputs for each field necessary
   List inputs;
+  String directoryPath;
+  File file;
 
   @override
   void initState(){
     super.initState();
-    if (widget.file != null){
-      experimentSettings.loadFromFile(widget.file);
-      inputs =  [
-        new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V', experimentSettings.initialVoltage.toString()),
-        new ValueInput('Vertex Voltage', (double d)=>{experimentSettings.vertexVoltage=d}, 'V', experimentSettings.vertexVoltage.toString()),
-        new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V', experimentSettings.finalVoltage.toString()),
-        new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s', experimentSettings.scanRate.toString()),
-        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, '', experimentSettings.sweepSegments.toString()),
-        new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V', experimentSettings.sampleInterval.toString()),
+    file = widget.file;
+    if (file != null){
+      directoryPath = file.path.substring(0, file.path.lastIndexOf('/')+1);
+      experimentSettings.loadFromFile(file);
+      inputs = [
+        TextFormField(
+          decoration: InputDecoration(
+            labelText: 'File Name'
+          ),
+          keyboardType: TextInputType.number,
+          initialValue: file.path.split('/').last.split('.').first,
+          validator: (String value) {
+            if (value.isEmpty){
+              return 'Please Enter a Value';
+            } 
+            return null;
+          },
+          onSaved: (String val) {
+           file = file.renameSync(directoryPath + val + '.csv');
+          }
+        ),
+        new ValueInput('Initial Voltage (V)', (double d)=>{experimentSettings.initialVoltage=d}, experimentSettings.initialVoltage.toString()),
+        new ValueInput('Vertex Voltage (V)', (double d)=>{experimentSettings.vertexVoltage=d}, experimentSettings.vertexVoltage.toString()),
+        new ValueInput('Final Voltage (V)', (double d)=>{experimentSettings.finalVoltage=d}, experimentSettings.finalVoltage.toString()),
+        new ValueInput('Scan Rate (V/s)', (double d)=>{experimentSettings.scanRate=d}, experimentSettings.scanRate.toString()),
+        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, experimentSettings.sweepSegments.toString()),
+        new ValueInput('Sample Interval (V)', (double d)=>{experimentSettings.sampleInterval=d}, experimentSettings.sampleInterval.toString()),
       ];
     } else {
       inputs = [
-        new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V', ''),
-        new ValueInput('Vertex Voltage', (double d)=>{experimentSettings.vertexVoltage=d}, 'V', ''),
-        new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V', ''),
-        new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s', ''),
-        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, '', ''),
-        new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V', ''),
+        new ValueInput('Initial Voltage (V)', (double d)=>{experimentSettings.initialVoltage=d}, ''),
+        new ValueInput('Vertex Voltage (V)', (double d)=>{experimentSettings.vertexVoltage=d}, ''),
+        new ValueInput('Final Voltage (V)', (double d)=>{experimentSettings.finalVoltage=d}, ''),
+        new ValueInput('Scan Rate (V/s)', (double d)=>{experimentSettings.scanRate=d}, ''),
+        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, ''),
+        new ValueInput('Sample Interval (V)', (double d)=>{experimentSettings.sampleInterval=d}, ''),
       ];
     }
   }
@@ -78,23 +108,13 @@ class _SetupFormState extends State<SetupForm> {
 
   // Method for loading variables in experimentSettings
   // Returns true if inputs valid, false if not
-  bool _loadVariables() {
+  bool _loadVariables(){
     // First validate that value inputs are all doubles
     if (_formKey.currentState.validate()){
         // If value inputs are doubles, load them into the Experiment Settings with save
         _formKey.currentState.save();
 
         return true;
-      
-
-        /*
-        TODO: checks necessary?
-        if (experimentSettings.lowVoltage >= experimentSettings.highVoltage){
-          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Low Voltage must be less than high voltage')));
-        } else {
-          print(experimentSettings);
-          return true;
-        }*/
     }
     return false;
   }
@@ -147,37 +167,59 @@ class _SetupFormState extends State<SetupForm> {
   Widget build(BuildContext context) {
     return Form(
         key: _formKey,
-        child: ListView(
-          children: <Widget>[
-            if (widget.file != null) Text("Config File: " + widget.file.path.split('/').last.split('.').first),
-            ...inputs,
-            RaisedButton(
-              onPressed: _loadVariables,
-              child: Text('Run Test'),),
-            RaisedButton(
-              onPressed: () async{
-                // if inputs valid
-                if(_loadVariables()){
-                  if (widget.file == null){
-                    _saveNewFile();
-                  } else {
-                    if (await experimentSettings.overwriteFile(widget.file)){
-                      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Overwrote file')));
-                    } else {
-                      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Could not locate file')));
-                    }  
-                  }
-                }
-              },
-              child: Text('Save')),
-            if (widget.file != null) 
-              RaisedButton(
-                onPressed: _saveNewFile,
-                child: Text('Save as New Config')
-                )
-          ]
-        ),
-      );
+        child: Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: ListView(
+            children: <Widget>[
+              ...inputs,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 10),
+                      child:RaisedButton(
+                      onPressed: _loadVariables,
+                      child: Text('Run Test')
+                      )
+                    )
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: RaisedButton(
+                      onPressed: () async{
+                        // if inputs valid
+                        if(_loadVariables()){
+                          if (file == null){
+                            _saveNewFile();
+                          } else {
+                            if (await experimentSettings.overwriteFile(file)){
+                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('Overwrote file')));
+                            } else {
+                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('Could not locate file')));
+                            }  
+                          }
+                        }
+                      },
+                      child: Text('Save')
+                    )
+                  )
+                    
+                  )
+                ]
+              ),
+              if (file != null) 
+                RaisedButton(
+                  onPressed: _saveNewFile,
+                  child: Text('Save as New Config')
+                  )
+            ]
+          ),
+        )
+      )
+    );
   }
 }
 
@@ -186,42 +228,32 @@ class _SetupFormState extends State<SetupForm> {
   Calls callback with double of input on formKey.currentState.save()
 */
 class ValueInput extends StatelessWidget {
-  ValueInput(this.text, this.callback, this.units, this.value);
-  final String text, units, value; // Text is displayed name, units is the displayed unit val at end
+  ValueInput(this.text, this.callback, this.value);
+  final String text, value; // Text is displayed name, units is the displayed unit val at end
   final Function callback; // Callback called on save
 
   @override
   Widget build(BuildContext context){
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child:Text(text + ":")
+    return TextFormField(
+        decoration: InputDecoration(
+          labelText: text
         ),
-        Expanded(child: 
-          TextFormField(
-            keyboardType: TextInputType.number,
-            initialValue: value,
-            validator: (String value) {
-              if (value.isEmpty){
-                return 'Please Enter a Value';
-              } else {
-                try {
-                  double.parse(value);
-                  return null;
-                } catch (e){
-                  return 'Enter a valid number';
-                }
-              }
-            },
-            onSaved: (String val){
-              callback(double.parse(val));
+        keyboardType: TextInputType.number,
+        initialValue: value,
+        validator: (String value) {
+          if (value.isEmpty){
+            return 'Please Enter a Value';
+          } else {
+            try {
+              double.parse(value);
+              return null;
+            } catch (e){
+              return 'Enter a valid number';
             }
-          ,)
-        ),
-        Expanded(
-          child: Text(units)
-        )
-      ],
-    );
+          }
+        },
+        onSaved: (String val){
+          callback(double.parse(val));
+        });
   }
 }

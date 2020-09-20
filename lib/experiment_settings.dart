@@ -2,10 +2,10 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 // A class for holding experiment settings variables
-class ExperimentSettings {
+class VoltammetrySettings {
   double initialVoltage, vertexVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval;
 
-  ExperimentSettings({initialVoltage=0.0, vertexVoltage=0.01, lowVoltage=0.0, finalVoltage=0.0, scanRate=0.0, 
+  VoltammetrySettings({initialVoltage=0.0, vertexVoltage=0.01, lowVoltage=0.0, finalVoltage=0.0, scanRate=0.0, 
                       sweepSegments=0.0, sampleInterval=0.0}){
       this.initialVoltage = initialVoltage;
       this.vertexVoltage = vertexVoltage;
@@ -18,7 +18,7 @@ class ExperimentSettings {
 
 
   // Gets the values of the object in a list
-  List getValuesList (){
+  List getValuesList(){
     return [initialVoltage, vertexVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval];
   }
 
@@ -54,6 +54,7 @@ class ExperimentSettings {
 
   // Overwrites data to existing file
   Future<bool> overwriteFile (File f) async {
+    print(await f.exists());
     if (await f.exists()){
       await f.writeAsString(this.toString());
       return true;

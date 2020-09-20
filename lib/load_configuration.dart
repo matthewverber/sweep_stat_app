@@ -18,11 +18,23 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.blue,
+          textTheme: ButtonTextTheme.primary
+        )
       ),
       home: MaterialApp(
         title: 'Load Configuration',
         home: Scaffold(
-          appBar: AppBar(title: Text('Load Configuration')),
+          appBar: AppBar(
+            title: Text('Load Configuration'),
+            leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: (){
+                  Navigator.pop(context);
+                },
+              )
+            ),
           body: LoadConfig()
         )
       )
@@ -39,7 +51,6 @@ class LoadConfig extends StatefulWidget {
 class _LoadConfigState extends State<LoadConfig> {
 
   Future<List<File>> files;
-  bool isDeleting = false;
 
   initState() {
     super.initState();
@@ -81,7 +92,7 @@ class _LoadConfigState extends State<LoadConfig> {
     }
   }
 
-  void passData(File f, BuildContext context) async{
+  Future<void> passData(File f, BuildContext context) async{
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -98,36 +109,72 @@ class _LoadConfigState extends State<LoadConfig> {
     return FutureBuilder<List<File>>(
       future: files,
       builder: (BuildContext context, AsyncSnapshot<List<File>> snapshot){
-        List<RaisedButton> children = [];
+        List<Widget> children = [];
         if (snapshot.hasData){
           snapshot.data.forEach((File f) {
+            String fileName = f.path.split('/').last.split('.').first;
             children.add(
-              RaisedButton(
-                onPressed: () async{
-                  if (!isDeleting){
-                    passData(f, context);
-                  } else {
-                    String result = await _deleteFile(f) ? "File deleted" : "File could not be deleted";
-                    Scaffold.of(context).showSnackBar(SnackBar(content: Text(result)));
-                  }
-
+              Dismissible(
+                key: UniqueKey(),
+                child: ListTile(
+                  onTap: () async{
+                      await passData(f, context);
+                  },
+                  title: Text(fileName)
+                ),
+                background: Container(
+                  color: Colors.red,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      Icons.delete,
+                      color: Colors.black
+                    )
+                  )
+                ),
+                onDismissed: (DismissDirection direction) {
+                  setState((){
+                    _deleteFile(f);
+                  });
+                  Scaffold.of(context).showSnackBar(SnackBar(content: Text('Deleted ' + fileName)));
                 },
-                child: Text(f.path.split('/').last.split('.').first))
+                confirmDismiss: (DismissDirection direction) async {
+                  return showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text('Are you sure you want to delete '+ fileName + '?'),
+                        actions: [
+                          MaterialButton(
+                            child: Text('Delete'),
+                            onPressed: (){
+                              Navigator.of(context).pop(true);
+                            },
+                          ),
+                          MaterialButton(
+                            child: Text('Cancel'),
+                            onPressed: (){
+                              Navigator.of(context).pop(false);
+                            },)
+                        ],
+                      );
+                    });
+                },
+              )
             );
           });
+          if (children.length == 0){
+            children.add(
+              Center(
+                child: Text(
+                  'No config files found!',
+                  style: TextStyle(fontSize: 30))
+              )
+            );
+          }
         } 
         return ListView(
-          children: [
-            Row(children: [
-              Text('Delete'),
-              Switch(value: isDeleting,
-              onChanged: (bool val){
-                setState((){
-                  isDeleting = val;
-                });
-              })
-            ],),
-            ...children],);
+          children: children,);
       }
     );
   }
