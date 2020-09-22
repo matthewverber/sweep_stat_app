@@ -56,7 +56,7 @@ class SetupForm extends StatefulWidget {
 
 class _SetupFormState extends State<SetupForm> {
   final _formKey = GlobalKey<FormState>(); // formkey for form
-  static VoltammetrySettings experimentSettings = new VoltammetrySettings(); // ExperimentSettings class to save data
+  VoltammetrySettings experimentSettings = new VoltammetrySettings(); // ExperimentSettings class to save data
   // List of inputs for each field necessary
   List inputs;
   String directoryPath;
