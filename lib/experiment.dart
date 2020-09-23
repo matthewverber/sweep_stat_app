@@ -4,8 +4,8 @@ import 'dart:io';
 
 class Experiment {
   final ExperimentSettings settings;
-  List<FlSpot> dataL = [];
-  List<FlSpot> dataR = [];
+  List<FlSpot> dataL = [FlSpot(0,0)];
+  List<FlSpot> dataR = [FlSpot(0,0)];
   Directory experimentDir;
 
   Experiment(this.settings);
@@ -23,7 +23,8 @@ class Experiment {
 
   List<String> dataToString() {
     try {
-      List<FlSpot> dataRCopy = dataR;
+      List<FlSpot> dataRCopy = [];
+      dataRCopy.addAll(dataR);
       dataRCopy.insertAll(0, dataL);
       List<String> stringified = dataRCopy.map((dataPoint) => "${dataPoint.x}, ${dataPoint.y}").toList();
       stringified.insert(0, "potential, current");

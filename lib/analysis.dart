@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:share/share.dart';
 import 'package:sweep_stat_app/experiment.dart';
@@ -108,37 +109,37 @@ class ExperimentSettingsValues extends StatelessWidget {
   const ExperimentSettingsValues({Key key, this.settings}) : super(key: key);
 
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [Text("Initial Voltage: ${settings.initialVoltage} V"), Text("High Voltage: ${settings.highVoltage} V")],
-        ),
-        Row(
+    Widget settingsText(String text) {
+      return Text(
+        text,
+        style: TextStyle(fontSize: 15),
+      );
+    }
+
+    Widget settingsRow(String settingName, dynamic settingValue, String unitSymbol) {
+      return Row(
+          children: [Expanded(child: settingsText('$settingName')), settingsText('${settingValue} $unitSymbol'), settingsText('')],
+          mainAxisAlignment: MainAxisAlignment.spaceBetween);
+    }
+
+    return Padding(
+        padding: EdgeInsets.only(left: 30, right: 30),
+        child: Column(
           children: [
-            Text("Low Voltage: ${settings.lowVoltage} V"),
-            Text("Final Voltage: ${settings.finalVoltage} V"),
+            Text(
+              "Settings",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 25),
+            ),
+            Divider(),
+            settingsRow("Initial Voltage", settings.initialVoltage, "V"),
+            settingsRow("Final Voltage", settings.finalVoltage, "V"),
+            settingsRow("Vertex Voltage", settings.highVoltage, "V"),
+            settingsRow("Scan Rate", settings.scanRate, "V/s"),
+            settingsRow("Sweep Segments", settings.sweepSegments, ""),
+            settingsRow("Sample Interval", settings.sampleInterval, "V")
           ],
-        ),
-        Row(
-          children: [
-            Text("Initial Polarity: ${settings.isPositivePolarity ? "Positive" : "Negative"}"),
-            Text("Scan Rate: ${settings.scanRate} V/s"),
-          ],
-        ),
-        Row(
-          children: [
-            Text("Sweep Segments: ${settings.sweepSegments}"),
-            Text("Sample Interval: ${settings.sampleInterval} V"),
-          ],
-        ),
-        Row(
-          children: [
-            Text("Sensitivity: ${settings.isAutoSens}"),
-            Text("Final Voltage Enabled: ${settings.isFinalE}"),
-          ],
-        ),
-      ],
-    );
+        ));
   }
 }
 
@@ -158,9 +159,11 @@ class AnalysisScreen extends StatefulWidget {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // TODO: Move spots to Experiment class !
   LineChartBarData data_L;
   LineChartBarData data_R;
+  double i, j; // TODO temp: remove later
 
   Future<bool> saveLocally() async {
     return await widget.experiment.saveExperiment();
@@ -181,87 +184,125 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void initState() {
-    data_L = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
-    data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true);
+    data_L = LineChartBarData(
+      spots: widget.experiment.dataL,
+      isCurved: true,
+    );
+    data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
+    i = widget.experiment.settings.lowVoltage; // TODO: temp remove, later
+    j = widget.experiment.settings.lowVoltage;
     super.initState();
   }
 
-  bool lock = false;
+  bool locki = false;
+  bool lockii = false;
 
-  int i = 0; // TODO: temp remove, later
   Widget build(BuildContext context) {
     return Scaffold(
         key: _scaffoldKey,
+        appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            actions: [
+              IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
+                              ExperimentSettingsValues(settings: widget.experiment.settings),
+                              RaisedButton(
+                                child: Text("Ok"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              )
+                            ]),
+                          );
+                        });
+                  })
+            ],
+            title: Text("Analysis")),
         body: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: Padding(
+            padding: EdgeInsets.only(top: 10, left: 5),
+            child: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 16.0, left: 0),
+                  padding: const EdgeInsets.only(right: 22.0, bottom: 20),
                   child: LineChart(LineChartData(
+                      maxX: widget.experiment.settings.highVoltage,
+                      minX: widget.experiment.settings.lowVoltage,
+                      clipData: FlClipData.vertical(),
                       lineBarsData: [data_L, data_R],
                       axisTitleData: FlAxisTitleData(
-                          show: true,
-                          leftTitle: AxisTitle(titleText: "Current i (AM)"),
-                          bottomTitle: AxisTitle(titleText: "Potential E (V)"),
-                          topTitle: AxisTitle(titleText: "Currnt Vs Potential"),
-                          rightTitle: AxisTitle(titleText: "")))),
+                        show: true,
+                        leftTitle:
+                        AxisTitle(showTitle: true, titleText: "Current i (AM)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        bottomTitle:
+                        AxisTitle(showTitle: true, titleText: "Potential E (V)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        topTitle: AxisTitle(
+                            showTitle: true, titleText: "Current Vs Potential", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                      ))),
                 ),
               ),
-              ExperimentSettingsValues(settings: widget.experiment.settings),
-              Row(
-                children: [
-                  RaisedButton(
-                      child: Text("Back"),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      }),
-                  RaisedButton(
-                      child: Text("Run Experiment"),
-                      onPressed: () {
-                        Timer.periodic(new Duration(milliseconds: 50), (timer) {
-                          setState(() {
-                            widget.experiment.dataL.add(new FlSpot(i + 0.0, 3 * sin(i + 0.0)));
-                            widget.experiment.dataR.add(new FlSpot(i + 1.0, cos(i + 1.0)));
-                            i += 1;
-                          });
+//              ExperimentSettingsValues(settings: widget.experiment.settings),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+                RaisedButton(
+                    color: Colors.blue,
+                    onPressed: () async {
+                      if (await saveLocally()) {
+                        _scaffoldKey.currentState.showSnackBar(SnackBar(
+                          content: Text("Saved successfully!"),
+                          duration: Duration(seconds: 1),
+                        ));
+                      } else {
+                        _scaffoldKey.currentState.showSnackBar(SnackBar(
+                          content: Text("Failed to save, please try again!"),
+                          duration: Duration(seconds: 1),
+                        ));
+                      }
+                    },
+                    child: Text(
+                      "Save",
+                      style: TextStyle(color: Colors.white, fontSize: 15),
+                    )),
+                RaisedButton(
+                    color: Colors.blue,
+                    child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
+                    onPressed: () {
+                      Timer.periodic(new Duration(milliseconds: 20), (timer) {
+                        setState(() {
+                          if (i > widget.experiment.settings.highVoltage) {
+                            return;
+                          }
+                          widget.experiment.dataL.add(new FlSpot(i + 0.0, i * i));
+                          widget.experiment.dataR.add(new FlSpot(j, cos(-j * j)));
+                          i += .3;
+                          j += .3;
                         });
-                      })
-                ],
-              ),
-              Row(
-                children: [
-                  RaisedButton(
-                      onPressed: () async {
-                        if (await saveLocally()) {
-                          _scaffoldKey.currentState.showSnackBar(SnackBar(
-                            content: Text("Saved successfully!"),
-                            duration: Duration(seconds: 1),
-                          ));
-                        } else {
-                          _scaffoldKey.currentState.showSnackBar(SnackBar(
-                            content: Text("Failed to save, please try again!"),
-                            duration: Duration(seconds: 1),
-                          ));
-                        }
-                      },
-                      child: Text("Save Locally")),
-                  RaisedButton(
-                      onPressed: () async {
-                        // showDialod
-                        if (!(await shareFiles())) {
-                          _scaffoldKey.currentState.showSnackBar(SnackBar(
-                            content: Text("Failed to save, please try again!"),
-                            duration: Duration(seconds: 3),
-                          ));
-                        }
-                      },
-                      child: Text("Send Data"))
-                ],
-              )
-            ],
+                      });
+                    }),
+                RaisedButton(
+                    color: Colors.blue,
+                    onPressed: () async {
+                      // showDialod
+                      if (!(await shareFiles())) {
+                        _scaffoldKey.currentState.showSnackBar(SnackBar(
+                          content: Text("Failed to save, please try again!"),
+                          duration: Duration(seconds: 3),
+                        ));
+                      }
+                    },
+                    child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15)))
+              ]),
+            ]),
           ),
         ));
   }

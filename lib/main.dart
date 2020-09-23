@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sweep_stat_app/analysis.dart';
 import 'package:sweep_stat_app/experiment.dart';
 
@@ -65,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
               projectDescription: "None"
             );
             // TODO: Move to tests
-            Navigator.pushReplacement(
+            Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (BuildContext context) =>
