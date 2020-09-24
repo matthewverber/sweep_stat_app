@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'guided_setup_pages/gs_page1.dart';
 import 'guided_setup_pages/gs_page2.dart';
+import 'guided_setup_pages/gs_page3.dart';
 
 // NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
 void main() {
@@ -37,14 +38,15 @@ class GuidedSetup extends StatefulWidget {
 }
 
 class _GuidedSetupState extends State<GuidedSetup> {
-  int _currentPage = 1;
+  int _currentPage = 0;
+  String selected = ">25";
 
   void _onBottomNavTapped(int index){
-    if (index == 0 && _currentPage > 1){
+    if (index == 0 && _currentPage > 0){
       setState(() {
         _currentPage -= 1;
       });
-    } else if (index == 1 && _currentPage < 10){
+    } else if (index == 1 && _currentPage < 3){
       setState((){
         _currentPage += 1;
       });
@@ -52,23 +54,28 @@ class _GuidedSetupState extends State<GuidedSetup> {
 
   }
 
-  Widget _selectDisplayWidget() {
-    switch(_currentPage){
-      case 1: return GSPage1();
-      case 2: return GSPage2();
-      default:
-        return Text("Page not implemented yet");
-    }
-  }
+
+
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> _pages = [
+    GSPage1(),
+    GSPage2(),
+    GSPage3(selected: selected,
+      callback: (String val){
+        setState((){
+          selected = val;
+        });
+      }
+    )
+    ];
     return Scaffold(
-      appBar: AppBar(title: Text('Guided Setup - Step ' + _currentPage.toString() + " of 10")),
+      appBar: AppBar(title: Text('Guided Setup - Step ' + (_currentPage+1).toString() + " of 10")),
       body: Center(
         child: FractionallySizedBox(
           widthFactor: 0.9,
-          child: _selectDisplayWidget()
+          child: _pages[_currentPage]
         )
       ),
       bottomNavigationBar: BottomNavigationBar(
