@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'advanced_setup.dart';
+import 'load_configuration.dart';
 
 void main() {
   runApp(MyApp());
@@ -91,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.all(8.0),
               splashColor: Colors.blueAccent,
               onPressed: () {
-                /*...*/
+                /* ... */
               },
               child: Text(
                 "GUIDED SETUP",
@@ -136,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.all(8.0),
               splashColor: Colors.blueAccent,
               onPressed: () {
-                /*...*/
+                _menuButtonPress(LoadConfigWrapper());
               },
               child: Text(
                 "LOAD CONFIG",
@@ -151,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.all(8.0),
               splashColor: Colors.blueAccent,
               onPressed: () {
-                /*...*/
+                /* ... */
               },
               child: Text(
                 "BLUETOOTH CONNECTION",
