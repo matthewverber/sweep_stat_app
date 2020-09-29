@@ -39,7 +39,8 @@ class GuidedSetup extends StatefulWidget {
 
 class _GuidedSetupState extends State<GuidedSetup> {
   int _currentPage = 0;
-  String selected = ">25";
+  String selected = ">25"; // Temporary variable for holding selected value of page 3 until we implement the Voltammetry Settings
+  List<Widget> _pages;
 
   void _onBottomNavTapped(int index){
     if (index == 0 && _currentPage > 0){
@@ -54,22 +55,28 @@ class _GuidedSetupState extends State<GuidedSetup> {
 
   }
 
+  @override
+  void initState(){
+    super.initState();
+    _pages = [
+      GSPage1(),
+      GSPage2(),
+      GSPage3(selected: selected,
+        callback: (String val){
+          setState((){
+            selected = val;
+          });
+        }
+      )
+    ];
+  }
+
 
 
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> _pages = [
-    GSPage1(),
-    GSPage2(),
-    GSPage3(selected: selected,
-      callback: (String val){
-        setState((){
-          selected = val;
-        });
-      }
-    )
-    ];
+    
     return Scaffold(
       appBar: AppBar(title: Text('Guided Setup - Step ' + (_currentPage+1).toString() + " of 10")),
       body: Center(
