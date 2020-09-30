@@ -65,6 +65,7 @@ class AmperometrySettings extends ExperimentSettings {
     return firstRow + secondRow;
   }
   
+  
 
   @override
   void loadFromFile (File f){

@@ -100,27 +100,42 @@ class _SetupFormState extends State<SetupForm> {
         new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(),  hint: 'Select Electrode', initialVal: voltammetrySettings.electrode, callback: (Electrode e)=>{voltammetrySettings.electrode = e})
       ];
     } else {
-      expType='CV';
-      inputs = [
-        new DropDownInput(labelStrings: ['CV', 'Amperometry'], values: ['CV',  'Amperometry'], initialVal: expType, callback: changeExperimentType),
-        new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, ''),
-        new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, ''),
-        new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, ''),
-        new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, ''),
-        new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, ''),
-        new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, ''),
-        new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', callback: (GainSettings g)=>{voltammetrySettings.gainSetting = g}),
-        new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode', callback: (Electrode e)=>{voltammetrySettings.electrode = e})
-      ];
+      changeExperimentType('CV');
     }
-    experimentSettings = voltammetrySettings;
   }
 
   void changeExperimentType(String type) {
     if (type != expType){
-      setState(() {
-        expType = type;
-      });
+      if (type == 'CV'){
+        setState(() {
+          expType='CV';
+          VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
+          inputs = [
+            new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, ''),
+            new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, ''),
+            new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, ''),
+            new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, ''),
+            new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, ''),
+            new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, ''),
+            new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', callback: (GainSettings g)=>{voltammetrySettings.gainSetting = g}),
+            new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode', callback: (Electrode e)=>{voltammetrySettings.electrode = e})
+          ];
+          experimentSettings = voltammetrySettings;
+        });
+      } else if (type == 'Amperometry'){
+        setState((){
+          expType='Amperometry';
+          AmperometrySettings amperometrySettings = new AmperometrySettings();
+          inputs = [
+            new ValueInput('Initial Voltage (V)', (double d)=>{amperometrySettings.initialVoltage=d}, ''),
+            new ValueInput('Sample Interval (V)', (double d)=>{amperometrySettings.sampleInterval=d}, ''),
+            new ValueInput('Run time (S)', (double d)=>{amperometrySettings.runtime=d}, ''),
+            new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', callback: (GainSettings g)=>{amperometrySettings.gainSetting = g}),
+            new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode', callback: (Electrode e)=>{amperometrySettings.electrode = e})
+          ];
+          experimentSettings = amperometrySettings;
+        });
+      }
     }
   }
 
@@ -146,7 +161,7 @@ class _SetupFormState extends State<SetupForm> {
      // Make sure name is valid
     if (name != null){
     // Write to file and alert user using experimentSettings' writeToFile
-      if (await experimentSettings.writeToFile(name, 'experiment_directory')){
+      if (await experimentSettings.writeToFile(name, expType == 'CV' ? 'cv_experiments' : 'amp_experiments')){
         Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
       } else {
       // If false returned, file already exists
@@ -191,6 +206,18 @@ class _SetupFormState extends State<SetupForm> {
             widthFactor: 0.9,
             child: ListView(
             children: <Widget>[
+              if (file == null)
+                new DropdownButton(
+                  value: expType,
+                  onChanged: (String val)=> changeExperimentType(val),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'CV',
+                      child: Text('CV')), 
+                      DropdownMenuItem(
+                      value: 'Amperometry',
+                      child: Text('Amperometry'))]
+                  ),
               ...inputs,
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
