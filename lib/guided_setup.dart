@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'guided_setup_pages/gs_page1.dart';
 import 'guided_setup_pages/gs_page2.dart';
 import 'guided_setup_pages/gs_page3.dart';
+import 'guided_setup_pages/gs_page4.dart';
+import 'guided_setup_pages/gs_page5.dart';
+import 'guided_setup_pages/gs_page6.dart';
+import 'guided_setup_pages/gs_page7.dart';
 
 // NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
 void main() {
@@ -40,7 +44,7 @@ class _GuidedSetupState extends State<GuidedSetup> {
       setState(() {
         _currentPage -= 1;
       });
-    } else if (index == 1 && _currentPage < 3) {
+    } else if (index == 1 && _currentPage < 7) {
       setState(() {
         _currentPage += 1;
       });
@@ -59,7 +63,11 @@ class _GuidedSetupState extends State<GuidedSetup> {
             setState(() {
               selected = val;
             });
-          })
+          }),
+      GSPage4(),
+      GSPage5(),
+      GSPage6(),
+      GSPage7(),
     ];
   }
 
