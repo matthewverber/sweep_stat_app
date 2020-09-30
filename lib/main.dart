@@ -52,19 +52,116 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  void _menuButtonPress(Widget route) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => route));
+  Widget _buildPrimaryButton(String buttonText, Widget route) {
+    return Container(
+        margin: EdgeInsets.all(10),
+        child: SizedBox(
+            width: 200,
+            height: 50,
+            child: FlatButton(
+              color: Colors.blue,
+              textColor: Colors.white,
+              disabledColor: Colors.grey,
+              disabledTextColor: Colors.black,
+              padding: EdgeInsets.all(5.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => route));
+              },
+              child: Text(
+                buttonText,
+                style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500),
+              ),
+            )));
+  }
+
+  Widget _buildSecondaryButton(String buttonText, Widget route) {
+    return OutlineButton(
+      color: Colors.grey,
+      textColor: Colors.blue,
+      disabledBorderColor: Colors.grey,
+      disabledTextColor: Colors.grey,
+      padding: EdgeInsets.all(8.0),
+      splashColor: Colors.blueAccent,
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => route));
+      },
+      child: Text(
+        buttonText,
+        style: TextStyle(fontSize: 20.0),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
+        appBar: AppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text(widget.title),
+        ),
+        body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(),
+              ),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildPrimaryButton("GUIDED SETUP",
+                        null), // TODO: Needs to be updated with guided setup widget route
+                    _buildPrimaryButton("ADVANCED SETUP", AdvancedSetup()),
+                  ],
+                ),
+              ),
+              Expanded(flex: 3, child: Column()),
+            ],
+          ),
+          SizedBox(
+            height: 100,
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Column(),
+              ),
+              Expanded(
+                flex: 6,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildSecondaryButton("RECENT RESULTS",
+                        null), // TODO: Needs recent results widget route
+                    _buildSecondaryButton("LOAD CONFIG", LoadConfigWrapper()),
+                    _buildSecondaryButton("BLUETOOTH CONNECTION",
+                        null), // TODO: Needs bluetooth widget route],))
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Column(),
+              ),
+            ],
+          )
+        ])
+        /* Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
@@ -161,12 +258,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-      ),
-      /*floatingActionButton: FloatingActionButton(
+      ), */
+        /*floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ),*/ // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        );
   }
 }
