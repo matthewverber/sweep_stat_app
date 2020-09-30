@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'advanced_setup.dart';
+import 'load_configuration.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,7 +28,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'SweepStat'),
     );
   }
 }
@@ -50,34 +52,116 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  Widget _buildPrimaryButton(String buttonText, Widget route) {
+    return Container(
+        margin: EdgeInsets.all(10),
+        child: SizedBox(
+            width: 200,
+            height: 50,
+            child: FlatButton(
+              color: Colors.blue,
+              textColor: Colors.white,
+              disabledColor: Colors.grey,
+              disabledTextColor: Colors.black,
+              padding: EdgeInsets.all(5.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => route));
+              },
+              child: Text(
+                buttonText,
+                style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500),
+              ),
+            )));
+  }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  Widget _buildSecondaryButton(String buttonText, Widget route) {
+    return OutlineButton(
+      color: Colors.grey,
+      textColor: Colors.blue,
+      disabledBorderColor: Colors.grey,
+      disabledTextColor: Colors.grey,
+      padding: EdgeInsets.all(8.0),
+      splashColor: Colors.blueAccent,
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => route));
+      },
+      child: Text(
+        buttonText,
+        style: TextStyle(fontSize: 20.0),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
+        appBar: AppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text(widget.title),
+        ),
+        body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(),
+              ),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildPrimaryButton("GUIDED SETUP",
+                        null), // TODO: Needs to be updated with guided setup widget route
+                    _buildPrimaryButton("ADVANCED SETUP", AdvancedSetup()),
+                  ],
+                ),
+              ),
+              Expanded(flex: 3, child: Column()),
+            ],
+          ),
+          SizedBox(
+            height: 100,
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Column(),
+              ),
+              Expanded(
+                flex: 6,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildSecondaryButton("RECENT RESULTS",
+                        null), // TODO: Needs recent results widget route
+                    _buildSecondaryButton("LOAD CONFIG", LoadConfigWrapper()),
+                    _buildSecondaryButton("BLUETOOTH CONNECTION",
+                        null), // TODO: Needs bluetooth widget route],))
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Column(),
+              ),
+            ],
+          )
+        ])
+        /* Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
@@ -97,21 +181,89 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            FlatButton(
+              color: Colors.blue,
+              textColor: Colors.white,
+              disabledColor: Colors.grey,
+              disabledTextColor: Colors.black,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /* ... */
+              },
+              child: Text(
+                "GUIDED SETUP",
+                style: TextStyle(fontSize: 20.0),
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            FlatButton(
+              color: Colors.blue,
+              textColor: Colors.white,
+              disabledColor: Colors.grey,
+              disabledTextColor: Colors.black,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                _menuButtonPress(AdvancedSetup());
+              },
+              child: Text(
+                "ADVANCED SETUP",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            OutlineButton(
+              color: Colors.grey,
+              textColor: Colors.blue,
+              disabledBorderColor: Colors.grey,
+              disabledTextColor: Colors.grey,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /*...*/
+              },
+              child: Text(
+                "RECENT RESULTS",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            OutlineButton(
+              color: Colors.grey,
+              textColor: Colors.blue,
+              disabledBorderColor: Colors.grey,
+              disabledTextColor: Colors.grey,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                _menuButtonPress(LoadConfigWrapper());
+              },
+              child: Text(
+                "LOAD CONFIG",
+                style: TextStyle(fontSize: 20.0),
+              ),
+            ),
+            OutlineButton(
+              color: Colors.grey,
+              textColor: Colors.blue,
+              disabledBorderColor: Colors.grey,
+              disabledTextColor: Colors.grey,
+              padding: EdgeInsets.all(8.0),
+              splashColor: Colors.blueAccent,
+              onPressed: () {
+                /* ... */
+              },
+              child: Text(
+                "BLUETOOTH CONNECTION",
+                style: TextStyle(fontSize: 20.0),
+              ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
+      ), */
+        /*floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+      ),*/ // This trailing comma makes auto-formatting nicer for build methods.
+        );
   }
 }
