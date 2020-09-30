@@ -56,7 +56,7 @@ class SetupForm extends StatefulWidget {
 
 class _SetupFormState extends State<SetupForm> {
   final _formKey = GlobalKey<FormState>(); // formkey for form
-  VoltammetrySettings experimentSettings = new VoltammetrySettings(); // ExperimentSettings class to save data
+  ExperimentSettings experimentSettings; // ExperimentSettings class to save data
   // List of inputs for each field necessary
   List inputs;
   String directoryPath;
@@ -66,9 +66,11 @@ class _SetupFormState extends State<SetupForm> {
   void initState(){
     super.initState();
     file = widget.file;
+    VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
     if (file != null){
       directoryPath = file.path.substring(0, file.path.lastIndexOf('/')+1);
       experimentSettings.loadFromFile(file);
+
       inputs = [
         TextFormField(
           decoration: InputDecoration(
@@ -86,23 +88,24 @@ class _SetupFormState extends State<SetupForm> {
            file = file.renameSync(directoryPath + val + '.csv');
           }
         ),
-        new ValueInput('Initial Voltage (V)', (double d)=>{experimentSettings.initialVoltage=d}, experimentSettings.initialVoltage.toString()),
-        new ValueInput('Vertex Voltage (V)', (double d)=>{experimentSettings.vertexVoltage=d}, experimentSettings.vertexVoltage.toString()),
-        new ValueInput('Final Voltage (V)', (double d)=>{experimentSettings.finalVoltage=d}, experimentSettings.finalVoltage.toString()),
-        new ValueInput('Scan Rate (V/s)', (double d)=>{experimentSettings.scanRate=d}, experimentSettings.scanRate.toString()),
-        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, experimentSettings.sweepSegments.toString()),
-        new ValueInput('Sample Interval (V)', (double d)=>{experimentSettings.sampleInterval=d}, experimentSettings.sampleInterval.toString()),
+        new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, voltammetrySettings.initialVoltage.toString()),
+        new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, voltammetrySettings.vertexVoltage.toString()),
+        new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, voltammetrySettings.finalVoltage.toString()),
+        new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, voltammetrySettings.scanRate.toString()),
+        new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, voltammetrySettings.sweepSegments.toString()),
+        new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, voltammetrySettings.sampleInterval.toString()),
       ];
     } else {
       inputs = [
-        new ValueInput('Initial Voltage (V)', (double d)=>{experimentSettings.initialVoltage=d}, ''),
-        new ValueInput('Vertex Voltage (V)', (double d)=>{experimentSettings.vertexVoltage=d}, ''),
-        new ValueInput('Final Voltage (V)', (double d)=>{experimentSettings.finalVoltage=d}, ''),
-        new ValueInput('Scan Rate (V/s)', (double d)=>{experimentSettings.scanRate=d}, ''),
-        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, ''),
-        new ValueInput('Sample Interval (V)', (double d)=>{experimentSettings.sampleInterval=d}, ''),
+        new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, ''),
+        new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, ''),
+        new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, ''),
+        new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, ''),
+        new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, ''),
+        new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, ''),
       ];
     }
+    experimentSettings = voltammetrySettings;
   }
 
 
@@ -127,7 +130,7 @@ class _SetupFormState extends State<SetupForm> {
      // Make sure name is valid
     if (name != null){
     // Write to file and alert user using experimentSettings' writeToFile
-      if (await experimentSettings.writeToFile(name)){
+      if (await experimentSettings.writeToFile(name, 'experiment_directory')){
         Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
       } else {
       // If false returned, file already exists
@@ -257,3 +260,28 @@ class ValueInput extends StatelessWidget {
         });
   }
 }
+/*
+class DropDownInput extends StatefulWidget{
+  final List<String> values;
+  const DropDownInput({Key key, this.values}) : super(key: key);
+  @override
+  _DropDownInputState createState() => _DropDownInputState();
+}
+
+class _DropDownInputState extends State<DropDownInput> {
+  int selectedInput = 0;
+
+
+  @override
+  Widget build(BuildContext context){
+    return DropdownButtonFormField(
+      value: selectedInput,
+      onChanged: (int value){
+        setState((){
+          selectedInput = value;
+        });
+      },
+      items: )
+    );
+  }
+}*/

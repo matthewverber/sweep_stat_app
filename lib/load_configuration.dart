@@ -62,19 +62,16 @@ class _LoadConfigState extends State<LoadConfig> {
     Directory appDir = await getApplicationDocumentsDirectory();
     Directory configDir = Directory(appDir.path + '/experiment_settings/');
 
-    // Return empty list if configDir doesn't exist
-    if (!await configDir.exists()){
-      return [];
-    }
-
-    // Get the list of files within the directory and add to fileNames
     List<File> returnFiles = [];
-    List<FileSystemEntity> items = configDir.listSync(recursive: false);
-    for (FileSystemEntity f in items){
-      if (f is File){
-        returnFiles.add(f);
+    if (await configDir.exists()){
+      List<FileSystemEntity> items = configDir.listSync(recursive: false);
+      for (FileSystemEntity f in items){
+        if (f is File){
+          returnFiles.add(f);
+        }
       }
     }
+    
     return returnFiles;
   }
 
