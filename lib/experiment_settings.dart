@@ -1,7 +1,7 @@
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-enum GainSettings {micro, macro}
+enum GainSettings {macro, micro}
 enum Electrode {pseudoref, silver, calomel, hydrogen}
 
 

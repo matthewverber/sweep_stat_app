@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'experiment_settings.dart';
 import 'dart:io';
@@ -61,6 +62,7 @@ class _SetupFormState extends State<SetupForm> {
   List inputs;
   String directoryPath;
   File file;
+  String expType;
 
   @override
   void initState(){
@@ -94,18 +96,32 @@ class _SetupFormState extends State<SetupForm> {
         new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, voltammetrySettings.scanRate.toString()),
         new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, voltammetrySettings.sweepSegments.toString()),
         new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, voltammetrySettings.sampleInterval.toString()),
+        new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', initialVal: voltammetrySettings.gainSetting, callback: (GainSettings g)=>{voltammetrySettings.gainSetting = g}),
+        new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(),  hint: 'Select Electrode', initialVal: voltammetrySettings.electrode, callback: (Electrode e)=>{voltammetrySettings.electrode = e})
       ];
     } else {
+      expType='CV';
       inputs = [
+        new DropDownInput(labelStrings: ['CV', 'Amperometry'], values: ['CV',  'Amperometry'], initialVal: expType, callback: changeExperimentType),
         new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, ''),
         new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, ''),
         new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, ''),
         new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, ''),
         new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, ''),
         new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, ''),
+        new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', callback: (GainSettings g)=>{voltammetrySettings.gainSetting = g}),
+        new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode', callback: (Electrode e)=>{voltammetrySettings.electrode = e})
       ];
     }
     experimentSettings = voltammetrySettings;
+  }
+
+  void changeExperimentType(String type) {
+    if (type != expType){
+      setState(() {
+        expType = type;
+      });
+    }
   }
 
 
@@ -260,28 +276,44 @@ class ValueInput extends StatelessWidget {
         });
   }
 }
-/*
+
 class DropDownInput extends StatefulWidget{
-  final List<String> values;
-  const DropDownInput({Key key, this.values}) : super(key: key);
+  final List<String> labelStrings;
+  final List values;
+  final String hint;
+  final initialVal;
+  final Function callback;
+  const DropDownInput({Key key, this.labelStrings, this.values, this.hint='', this.initialVal, this.callback}) : super(key: key);
   @override
   _DropDownInputState createState() => _DropDownInputState();
 }
 
 class _DropDownInputState extends State<DropDownInput> {
-  int selectedInput = 0;
+  var selectedInput;
+
+  @override
+  void initState() {
+
+    super.initState();
+    selectedInput = widget.initialVal;
+  }
 
 
   @override
   Widget build(BuildContext context){
     return DropdownButtonFormField(
+      hint: Text(widget.hint),
       value: selectedInput,
-      onChanged: (int value){
+      onChanged: (value){
         setState((){
           selectedInput = value;
         });
       },
-      items: )
+      items: List.generate(widget.labelStrings.length,
+        (i) => DropdownMenuItem(value: widget.values[i], child: Text(widget.labelStrings[i]))),
+      validator: (val) => val==null ? 'Please select a value' : null,
+      onSaved: (val){widget.callback(val);},
+
     );
   }
-}*/
+}
