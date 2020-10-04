@@ -24,11 +24,11 @@ abstract class ExperimentSettings {
       experimentDir = await experimentDir.create();
     }
     
-    File experimentFile = new File(experimentDir.path + '/' + fileName + '.csv');
+    File experimentFile = new File(experimentDir.path + fileName + '.csv');
     if (await experimentFile.exists()){
       return false;
     }
-    print(this.toString());
+
     await experimentFile.writeAsString(this.toString());
     return true;
   }
@@ -60,8 +60,8 @@ class AmperometrySettings extends ExperimentSettings {
   @override
   String toString () {
     String firstRow = 'initialVoltage,sampleInterval,runtime,gainSetting,electrode\n';
-    String secondRow = initialVoltage.toString() + ',' +  sampleInterval.toString() + ','
-                       + gainSetting.toString() + ',' + electrode.toString();
+    String secondRow = initialVoltage.toString() + ',' +  sampleInterval.toString() + ',' + runtime.toString() + ','
+                       + gainSetting.toString().split('.').last + ',' + electrode.toString().split('.').last;
     return firstRow + secondRow;
   }
   
@@ -70,6 +70,7 @@ class AmperometrySettings extends ExperimentSettings {
   @override
   void loadFromFile (File f){
     String fileData = f.readAsStringSync();
+    print(fileData);
     List<String> fileInfo = fileData.split('\n')[1].split(',');
     initialVoltage = double.parse(fileInfo[0]);
     sampleInterval = double.parse(fileInfo[1]);
@@ -99,7 +100,7 @@ class VoltammetrySettings extends ExperimentSettings{
     String firstRow = 'initialVoltage,vertexVoltage,finalVoltage,scanRate,sweepSegments,sampleInterval,gainSetting,electrode\n';
     String secondRow = initialVoltage.toString() + ',' + vertexVoltage.toString()  + ',' + finalVoltage.toString() + ',' 
                        + scanRate.toString() + ',' + sweepSegments.toString() + ',' + sampleInterval.toString() + ','
-                       + gainSetting.toString() + ',' + electrode.toString();
+                       + gainSetting.toString().split('.').last + ',' + electrode.toString().split('.').last;
     return firstRow + secondRow;
   }
 
@@ -115,7 +116,7 @@ class VoltammetrySettings extends ExperimentSettings{
     scanRate = double.parse(fileInfo[3]);
     sweepSegments = double.parse(fileInfo[4]);
     sampleInterval = double.parse(fileInfo[5]);
-    gainSetting = GainSettings.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[6]);
+    gainSetting = GainSettings.values.firstWhere((val) => val.toString().split('.').last == fileInfo[6]);
     electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[7]);
   }
 

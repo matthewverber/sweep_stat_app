@@ -23,36 +23,55 @@ class MyApp extends StatelessWidget {
           textTheme: ButtonTextTheme.primary
         )
       ),
-      home: MaterialApp(
-        title: 'Load Configuration',
-        home: Scaffold(
-          appBar: AppBar(
-            title: Text('Load Configuration'),
-            leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-              )
-            ),
-          body: LoadConfig()
-        )
+      home: LoadConfig()
+    );
+  }
+}
+
+class LoadConfig extends StatelessWidget {
+  Widget build(BuildContext context){
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Load Configuration'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: (){
+              Navigator.pop(context);
+            },
+          ),
+          bottom: TabBar(
+            tabs: [
+              Tab(child: Text('CV')),
+              Tab(child: Text('Amperometry'))
+            ]
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            LoadConfigType(expType: 'CV'),
+            LoadConfigType(expType: 'Amperometry')
+          ],
+        ),
       )
     );
   }
 }
 
-class LoadConfig extends StatefulWidget {
-  const LoadConfig({Key key}) : super(key: key);
+class LoadConfigType extends StatefulWidget {
+  final String expType;
+  const LoadConfigType({Key key, this.expType}) : super(key: key);
   @override
   _LoadConfigState createState() => _LoadConfigState();
 }
 
-class _LoadConfigState extends State<LoadConfig> {
+class _LoadConfigState extends State<LoadConfigType> {
 
   Future<List<File>> files;
 
-  initState() {
+  @override
+  void initState() {
     super.initState();
     files = _loadConfigs();
   }
@@ -60,8 +79,7 @@ class _LoadConfigState extends State<LoadConfig> {
   Future<List<File>> _loadConfigs() async {    
     // Load config directory
     Directory appDir = await getApplicationDocumentsDirectory();
-    Directory configDir = Directory(appDir.path + '/experiment_settings/');
-
+    Directory configDir = Directory(appDir.path + '/' +  (widget.expType == 'CV' ? 'cv_experiments': 'amp_experiments') + '/');
     List<File> returnFiles = [];
     if (await configDir.exists()){
       List<FileSystemEntity> items = configDir.listSync(recursive: false);
@@ -93,7 +111,7 @@ class _LoadConfigState extends State<LoadConfig> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AdvancedSetup(f),
+        builder: (context) => AdvancedSetup(f, widget.expType),
       )
     );
     setState(() {
@@ -106,13 +124,14 @@ class _LoadConfigState extends State<LoadConfig> {
     return FutureBuilder<List<File>>(
       future: files,
       builder: (BuildContext context, AsyncSnapshot<List<File>> snapshot){
-        List<Widget> children = [];
         if (snapshot.hasData){
-          snapshot.data.forEach((File f) {
-            String fileName = f.path.split('/').last.split('.').first;
-            children.add(
-              Dismissible(
+          return ListView.separated(
+            itemBuilder: (BuildContext context, int i){
+              File f = snapshot.data[i];
+              String fileName = f.path.split('/').last.split('.').first;
+              return Dismissible(
                 key: UniqueKey(),
+                direction: DismissDirection.endToStart,
                 child: ListTile(
                   onTap: () async{
                       await passData(f, context);
@@ -157,21 +176,14 @@ class _LoadConfigState extends State<LoadConfig> {
                       );
                     });
                 },
-              )
-            );
-          });
-          if (children.length == 0){
-            children.add(
-              Center(
-                child: Text(
-                  'No config files found!',
-                  style: TextStyle(fontSize: 30))
-              )
-            );
-          }
+              );
+            }, 
+            separatorBuilder: (BuildContext context, int index)=> Divider(), 
+            itemCount: snapshot.data.length);
+          
         } 
         return ListView(
-          children: children,);
+          children: []);
       }
     );
   }
