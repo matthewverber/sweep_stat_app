@@ -1,35 +1,20 @@
+
 import 'package:flutter/material.dart';
 import 'experiment_settings.dart';
 import 'dart:io';
+import 'package:share/share.dart';
 
 // NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
-void main() {
-  runApp(MyApp());
-}
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MaterialApp(
-        title: 'Advanced Setup',
-        home: AdvancedSetup()
-      )
-    );
-  }
-}
-
 class AdvancedSetup extends StatelessWidget {
   final File f;
-  AdvancedSetup([this.f]);
+  final String t;
+  AdvancedSetup([this.f, this.t]);
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Advanced Setup')),
-      body: SetupForm(file: f)
+      appBar: AppBar(
+        title: Text('Advanced Setup'),
+        ),
+      body: SetupForm(file: f, fileType: t)
     );
   }
 }
@@ -39,62 +24,129 @@ class AdvancedSetup extends StatelessWidget {
 */
 class SetupForm extends StatefulWidget {
   final File file;
-  const SetupForm({Key key, this.file}) : super(key: key);
+  final String fileType;
+  const SetupForm({Key key, this.file, this.fileType}) : super(key: key);
   @override
   _SetupFormState createState() => _SetupFormState();
 }
 
 class _SetupFormState extends State<SetupForm> {
   final _formKey = GlobalKey<FormState>(); // formkey for form
-  static ExperimentSettings experimentSettings = new ExperimentSettings(); // ExperimentSettings class to save data
+  ExperimentSettings experimentSettings; // ExperimentSettings class to save data
   // List of inputs for each field necessary
   List inputs;
+  File file;
+  String expType;
 
   @override
   void initState(){
     super.initState();
-    if (widget.file != null){
-      experimentSettings.loadFromFile(widget.file);
-      inputs =  [
-        new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V', experimentSettings.initialVoltage.toString()),
-        new ValueInput('Vertex Voltage', (double d)=>{experimentSettings.vertexVoltage=d}, 'V', experimentSettings.vertexVoltage.toString()),
-        new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V', experimentSettings.finalVoltage.toString()),
-        new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s', experimentSettings.scanRate.toString()),
-        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, '', experimentSettings.sweepSegments.toString()),
-        new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V', experimentSettings.sampleInterval.toString()),
-      ];
+    file = widget.file;
+    if (file != null){
+      String directoryPath = file.path.substring(0, file.path.lastIndexOf('/')+1);
+      String fileName = file.path.split('/').last.split('.').first;
+      TextFormField nameWidget = TextFormField(
+        decoration: InputDecoration(
+          labelText: 'File Name'
+        ),
+        keyboardType: TextInputType.number,
+        initialValue: fileName,
+        validator: (String value) {
+          if (value.isEmpty){
+            return 'Please Enter a Value';
+          } 
+          return null;
+        },
+        onSaved: (String val) {
+          if (val != fileName){
+            file = file.renameSync(directoryPath + val + '.csv');
+          }
+        }
+      );
+      if (widget.fileType == 'CV'){
+        VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
+        voltammetrySettings.loadFromFile(file);
+
+        inputs = [
+          nameWidget,
+          new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, voltammetrySettings.initialVoltage.toString()),
+          new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, voltammetrySettings.vertexVoltage.toString()),
+          new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, voltammetrySettings.finalVoltage.toString()),
+          new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, voltammetrySettings.scanRate.toString()),
+          new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, voltammetrySettings.sweepSegments.toString()),
+          new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, voltammetrySettings.sampleInterval.toString()),
+          new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', initialVal: voltammetrySettings.gainSetting, callback: (GainSettings g)=>{voltammetrySettings.gainSetting = g}),
+          new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(),  hint: 'Select Electrode', initialVal: voltammetrySettings.electrode, callback: (Electrode e)=>{voltammetrySettings.electrode = e})
+        ];
+        experimentSettings = voltammetrySettings;
+        expType = 'CV';
+
+      } else {
+        AmperometrySettings amperometrySettings = new AmperometrySettings();
+        amperometrySettings.loadFromFile(file);
+        inputs = [
+          nameWidget,
+          new ValueInput('Initial Voltage (V)', (double d)=>{amperometrySettings.initialVoltage=d}, amperometrySettings.initialVoltage.toString()),
+          new ValueInput('Sample Interval (V)', (double d)=>{amperometrySettings.sampleInterval=d}, amperometrySettings.sampleInterval.toString()),
+          new ValueInput('Run time (S)', (double d)=>{amperometrySettings.runtime=d}, amperometrySettings.runtime.toString()),
+          new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting',  initialVal: amperometrySettings.gainSetting, callback: (GainSettings g)=>{amperometrySettings.gainSetting = g}),
+          new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode',  initialVal: amperometrySettings.electrode, callback: (Electrode e)=>{amperometrySettings.electrode = e})
+        ];
+        experimentSettings = amperometrySettings;
+        expType = 'Amperometry';
+        
+      }
+
     } else {
-      inputs = [
-        new ValueInput('Initial Voltage', (double d)=>{experimentSettings.initialVoltage=d}, 'V', ''),
-        new ValueInput('Vertex Voltage', (double d)=>{experimentSettings.vertexVoltage=d}, 'V', ''),
-        new ValueInput('Final Voltage', (double d)=>{experimentSettings.finalVoltage=d}, 'V', ''),
-        new ValueInput('Scan Rate', (double d)=>{experimentSettings.scanRate=d}, 'V/s', ''),
-        new ValueInput('Sweep Segments', (double d)=>{experimentSettings.sweepSegments=d}, '', ''),
-        new ValueInput('Sample Interval', (double d)=>{experimentSettings.sampleInterval=d}, 'V', ''),
-      ];
+      changeExperimentType('CV');
+    }
+  }
+
+  void changeExperimentType(String type) {
+    if (type != expType){
+      if (type == 'CV'){
+        setState(() {
+          expType='CV';
+          VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
+          inputs = [
+            new ValueInput('Initial Voltage (V)', (double d)=>{voltammetrySettings.initialVoltage=d}, ''),
+            new ValueInput('Vertex Voltage (V)', (double d)=>{voltammetrySettings.vertexVoltage=d}, ''),
+            new ValueInput('Final Voltage (V)', (double d)=>{voltammetrySettings.finalVoltage=d}, ''),
+            new ValueInput('Scan Rate (V/s)', (double d)=>{voltammetrySettings.scanRate=d}, ''),
+            new ValueInput('Sweep Segments', (double d)=>{voltammetrySettings.sweepSegments=d}, ''),
+            new ValueInput('Sample Interval (V)', (double d)=>{voltammetrySettings.sampleInterval=d}, ''),
+            new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', callback: (GainSettings g)=>{voltammetrySettings.gainSetting = g}),
+            new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode', callback: (Electrode e)=>{voltammetrySettings.electrode = e})
+          ];
+          experimentSettings = voltammetrySettings;
+        });
+      } else if (type == 'Amperometry'){
+        setState((){
+          expType='Amperometry';
+          AmperometrySettings amperometrySettings = new AmperometrySettings();
+          inputs = [
+            new ValueInput('Initial Voltage (V)', (double d)=>{amperometrySettings.initialVoltage=d}, ''),
+            new ValueInput('Sample Interval (V)', (double d)=>{amperometrySettings.sampleInterval=d}, ''),
+            new ValueInput('Run time (S)', (double d)=>{amperometrySettings.runtime=d}, ''),
+            new DropDownInput(labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'], values: GainSettings.values.toList(),  hint: 'Select Gain Setting', callback: (GainSettings g)=>{amperometrySettings.gainSetting = g}),
+            new DropDownInput(labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'], values: Electrode.values.toList(), hint: 'Select Electrode', callback: (Electrode e)=>{amperometrySettings.electrode = e})
+          ];
+          experimentSettings = amperometrySettings;
+        });
+      }
     }
   }
 
 
   // Method for loading variables in experimentSettings
   // Returns true if inputs valid, false if not
-  bool _loadVariables() {
+  bool _loadVariables(){
     // First validate that value inputs are all doubles
     if (_formKey.currentState.validate()){
         // If value inputs are doubles, load them into the Experiment Settings with save
         _formKey.currentState.save();
 
         return true;
-      
-
-        /*
-        TODO: checks necessary?
-        if (experimentSettings.lowVoltage >= experimentSettings.highVoltage){
-          Scaffold.of(context).showSnackBar(SnackBar(content: Text('Low Voltage must be less than high voltage')));
-        } else {
-          print(experimentSettings);
-          return true;
-        }*/
     }
     return false;
   }
@@ -107,7 +159,7 @@ class _SetupFormState extends State<SetupForm> {
      // Make sure name is valid
     if (name != null){
     // Write to file and alert user using experimentSettings' writeToFile
-      if (await experimentSettings.writeToFile(name)){
+      if (await experimentSettings.writeToFile(name, expType == 'CV' ? 'cv_experiments' : 'amp_experiments')){
         Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
       } else {
       // If false returned, file already exists
@@ -147,37 +199,85 @@ class _SetupFormState extends State<SetupForm> {
   Widget build(BuildContext context) {
     return Form(
         key: _formKey,
-        child: ListView(
-          children: <Widget>[
-            if (widget.file != null) Text("Config File: " + widget.file.path.split('/').last.split('.').first),
-            ...inputs,
-            RaisedButton(
-              onPressed: _loadVariables,
-              child: Text('Run Test'),),
-            RaisedButton(
-              onPressed: () async{
-                // if inputs valid
-                if(_loadVariables()){
-                  if (widget.file == null){
-                    _saveNewFile();
-                  } else {
-                    if (await experimentSettings.overwriteFile(widget.file)){
-                      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Overwrote file')));
-                    } else {
-                      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Could not locate file')));
-                    }  
-                  }
-                }
-              },
-              child: Text('Save')),
-            if (widget.file != null) 
-              RaisedButton(
-                onPressed: _saveNewFile,
-                child: Text('Save as New Config')
-                )
-          ]
-        ),
-      );
+        child: Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: ListView(
+            children: <Widget>[
+              if (file == null)
+                new DropdownButton(
+                  value: expType,
+                  onChanged: (String val)=> changeExperimentType(val),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'CV',
+                      child: Text('CV')), 
+                      DropdownMenuItem(
+                      value: 'Amperometry',
+                      child: Text('Amperometry'))]
+                  ),
+              ...inputs,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                      onPressed: _loadVariables,
+                      child: Text('Run Test')
+                    )
+                  ),
+                  Spacer(flex: 1),
+                  Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                      onPressed: () async{
+                        // if inputs valid
+                        if(_loadVariables()){
+                          if (file == null){
+                            _saveNewFile();
+                          } else {
+                            if (await experimentSettings.overwriteFile(file)){
+                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('File Updated')));
+                            } else {
+                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('Error updating file')));
+                            }  
+                          }
+                        }
+                      },
+                      child: Text('Save')
+                    )
+                  )
+                    
+                ]
+              ),
+              if (file != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child:RaisedButton(
+                        onPressed: ()=> Share.shareFiles([file.path]),
+                        child: Text('Export')
+                    )
+                  ),
+                  Spacer(flex: 1),
+                  Expanded(
+                    flex: 5,
+                    child:RaisedButton(
+                        onPressed: _saveNewFile,
+                        child: Text('Save as New Config')
+                    )
+                  )
+                    
+                ]
+              )
+            ]
+          ),
+        )
+      )
+    );
   }
 }
 
@@ -186,42 +286,73 @@ class _SetupFormState extends State<SetupForm> {
   Calls callback with double of input on formKey.currentState.save()
 */
 class ValueInput extends StatelessWidget {
-  ValueInput(this.text, this.callback, this.units, this.value);
-  final String text, units, value; // Text is displayed name, units is the displayed unit val at end
+  ValueInput(this.text, this.callback, this.value);
+  final String text, value; // Text is displayed name, units is the displayed unit val at end
   final Function callback; // Callback called on save
 
   @override
   Widget build(BuildContext context){
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child:Text(text + ":")
+    return TextFormField(
+        decoration: InputDecoration(
+          labelText: text
         ),
-        Expanded(child: 
-          TextFormField(
-            keyboardType: TextInputType.number,
-            initialValue: value,
-            validator: (String value) {
-              if (value.isEmpty){
-                return 'Please Enter a Value';
-              } else {
-                try {
-                  double.parse(value);
-                  return null;
-                } catch (e){
-                  return 'Enter a valid number';
-                }
-              }
-            },
-            onSaved: (String val){
-              callback(double.parse(val));
+        keyboardType: TextInputType.number,
+        initialValue: value,
+        validator: (String value) {
+          if (value.isEmpty){
+            return 'Please Enter a Value';
+          } else {
+            try {
+              double.parse(value);
+              return null;
+            } catch (e){
+              return 'Enter a valid number';
             }
-          ,)
-        ),
-        Expanded(
-          child: Text(units)
-        )
-      ],
+          }
+        },
+        onSaved: (String val){
+          callback(double.parse(val));
+        });
+  }
+}
+
+class DropDownInput extends StatefulWidget{
+  final List<String> labelStrings;
+  final List values;
+  final String hint;
+  final initialVal;
+  final Function callback;
+  const DropDownInput({Key key, this.labelStrings, this.values, this.hint='', this.initialVal, this.callback}) : super(key: key);
+  @override
+  _DropDownInputState createState() => _DropDownInputState();
+}
+
+class _DropDownInputState extends State<DropDownInput> {
+  var selectedInput;
+
+  @override
+  void initState() {
+
+    super.initState();
+    selectedInput = widget.initialVal;
+  }
+
+
+  @override
+  Widget build(BuildContext context){
+    return DropdownButtonFormField(
+      hint: Text(widget.hint),
+      value: selectedInput,
+      onChanged: (value){
+        setState((){
+          selectedInput = value;
+        });
+      },
+      items: List.generate(widget.labelStrings.length,
+        (i) => DropdownMenuItem(value: widget.values[i], child: Text(widget.labelStrings[i]))),
+      validator: (val) => val==null ? 'Please select a value' : null,
+      onSaved: (val){widget.callback(val);},
+
     );
   }
 }

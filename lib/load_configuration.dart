@@ -5,44 +5,50 @@ import 'advanced_setup.dart';
 
 // Widget responsible for selecting which config file a user wants to be loaded from the existing files
 
-// NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
+class LoadConfig extends StatelessWidget {
+  Widget build(BuildContext context){
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Load Configuration'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: (){
+              Navigator.pop(context);
+            },
+          ),
+          bottom: TabBar(
+            tabs: [
+  Tab(child: Text('CV')),
+              Tab(child: Text('Amperometry'))
+            ]
+          ),
         ),
-        home: MaterialApp(
-            title: 'Load Configuration', home: LoadConfigWrapper()));
+        body: TabBarView(
+          children: [
+            LoadConfigType(expType: 'CV'),
+            LoadConfigType(expType: 'Amperometry')
+          ],
+        ),
+      )
+    );
   }
 }
 
-// TODO: What is flutter convention for this?
-class LoadConfigWrapper extends StatelessWidget {
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: Text('Load Configuration')), body: LoadConfig());
-  }
-}
-
-class LoadConfig extends StatefulWidget {
-  const LoadConfig({Key key}) : super(key: key);
+class LoadConfigType extends StatefulWidget {
+  final String expType;
+  const LoadConfigType({Key key, this.expType}) : super(key: key);
   @override
   _LoadConfigState createState() => _LoadConfigState();
 }
 
-class _LoadConfigState extends State<LoadConfig> {
-  Future<List<File>> files;
-  bool isDeleting = false;
+class _LoadConfigState extends State<LoadConfigType> {
 
-  initState() {
+  Future<List<File>> files;
+
+  @override
+  void initState() {
     super.initState();
     files = _loadConfigs();
   }
@@ -50,21 +56,17 @@ class _LoadConfigState extends State<LoadConfig> {
   Future<List<File>> _loadConfigs() async {
     // Load config directory
     Directory appDir = await getApplicationDocumentsDirectory();
-    Directory configDir = Directory(appDir.path + '/experiment_settings/');
-
-    // Return empty list if configDir doesn't exist
-    if (!await configDir.exists()) {
-      return [];
-    }
-
-    // Get the list of files within the directory and add to fileNames
+    Directory configDir = Directory(appDir.path + '/' +  (widget.expType == 'CV' ? 'cv_experiments': 'amp_experiments') + '/');
     List<File> returnFiles = [];
-    List<FileSystemEntity> items = configDir.listSync(recursive: false);
-    for (FileSystemEntity f in items) {
-      if (f is File) {
-        returnFiles.add(f);
+    if (await configDir.exists()){
+      List<FileSystemEntity> items = configDir.listSync(recursive: false);
+      for (FileSystemEntity f in items){
+        if (f is File){
+          returnFiles.add(f);
+        }
       }
     }
+    
     return returnFiles;
   }
 
@@ -82,12 +84,13 @@ class _LoadConfigState extends State<LoadConfig> {
     }
   }
 
-  void passData(File f, BuildContext context) async {
+  Future<void> passData(File f, BuildContext context) async{
     await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AdvancedSetup(f),
-        ));
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdvancedSetup(f, widget.expType),
+      )
+    );
     setState(() {
       files = _loadConfigs();
     });
@@ -96,43 +99,69 @@ class _LoadConfigState extends State<LoadConfig> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<File>>(
-        future: files,
-        builder: (BuildContext context, AsyncSnapshot<List<File>> snapshot) {
-          List<RaisedButton> children = [];
-          if (snapshot.hasData) {
-            snapshot.data.forEach((File f) {
-              children.add(RaisedButton(
-                  onPressed: () async {
-                    if (!isDeleting) {
-                      passData(f, context);
-                    } else {
-                      String result = await _deleteFile(f)
-                          ? "File deleted"
-                          : "File could not be deleted";
-                      Scaffold.of(context)
-                          .showSnackBar(SnackBar(content: Text(result)));
-                    }
+      future: files,
+      builder: (BuildContext context, AsyncSnapshot<List<File>> snapshot){
+        if (snapshot.hasData){
+          return ListView.separated(
+            itemBuilder: (BuildContext context, int i){
+              File f = snapshot.data[i];
+              String fileName = f.path.split('/').last.split('.').first;
+              return Dismissible(
+                key: UniqueKey(),
+                direction: DismissDirection.endToStart,
+                child: ListTile(
+                  onTap: () async{
+                      await passData(f, context);
                   },
-                  child: Text(f.path.split('/').last.split('.').first)));
-            });
-          }
-          return ListView(
-            children: [
-              Row(
-                children: [
-                  Text('Delete'),
-                  Switch(
-                      value: isDeleting,
-                      onChanged: (bool val) {
-                        setState(() {
-                          isDeleting = val;
-                        });
-                      })
-                ],
-              ),
-              ...children
-            ],
-          );
-        });
+                  title: Text(fileName)
+                ),
+                background: Container(
+                  color: Colors.red,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      Icons.delete,
+                      color: Colors.black
+                    )
+                  )
+                ),
+                onDismissed: (DismissDirection direction) {
+                  setState((){
+                    _deleteFile(f);
+                  });
+                  Scaffold.of(context).showSnackBar(SnackBar(content: Text('Deleted ' + fileName)));
+                },
+                confirmDismiss: (DismissDirection direction) async {
+                  return showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text('Are you sure you want to delete '+ fileName + '?'),
+                        actions: [
+                          MaterialButton(
+                            child: Text('Delete'),
+                            onPressed: (){
+                              Navigator.of(context).pop(true);
+                            },
+                          ),
+                          MaterialButton(
+                            child: Text('Cancel'),
+                            onPressed: (){
+                              Navigator.of(context).pop(false);
+                            },)
+                        ],
+                      );
+                    });
+                },
+              );
+            }, 
+            separatorBuilder: (BuildContext context, int index)=> Divider(), 
+            itemCount: snapshot.data.length);
+          
+        } 
+        return ListView(
+          children: []);
+      }
+    );
   }
 }

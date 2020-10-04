@@ -1,58 +1,43 @@
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-// A class for holding experiment settings variables
-class ExperimentSettings {
-  double initialVoltage, vertexVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval;
-
-  ExperimentSettings({initialVoltage=0.0, vertexVoltage=0.01, lowVoltage=0.0, finalVoltage=0.0, scanRate=0.0, 
-                      sweepSegments=0.0, sampleInterval=0.0}){
-      this.initialVoltage = initialVoltage;
-      this.vertexVoltage = vertexVoltage;
-      this.finalVoltage = finalVoltage;
-      this.scanRate = scanRate;
-      this.sweepSegments = sweepSegments;
-      this.sampleInterval = sampleInterval;
-  }
+enum GainSettings {macro, micro}
+enum Electrode {pseudoref, silver, calomel, hydrogen}
 
 
+abstract class ExperimentSettings {
+  double initialVoltage, sampleInterval;
+  GainSettings gainSetting;
+  Electrode electrode;
 
-  // Gets the values of the object in a list
-  List getValuesList (){
-    return [initialVoltage, vertexVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval];
-  }
+  ExperimentSettings(this.initialVoltage, this.sampleInterval, this.gainSetting, this.electrode);
 
-  // toString formats like a csv file for ease of writing to file
-  @override
-  String toString () {
-    String firstRow = 'initialVoltage,vertexVoltage,finalVoltage,scanRate,sweepSegments,sampleInterval\n';
-    String secondRow = initialVoltage.toString() + ',' + vertexVoltage.toString()  + ',' + finalVoltage.toString() + ',' 
-                       + scanRate.toString() + ',' + sweepSegments.toString() + ',' + sampleInterval.toString();
-    return firstRow + secondRow;
-  }
-
-  /*
+    /*
     Method writes current object to file on device
     source: https://pub.dev/packages/path_provider
     Returns true if saved and false if file with name exists
   */
-  Future<bool> writeToFile (String fileName) async {
+  Future<bool> writeToFile (String fileName, String dirName) async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
-    Directory experimentDir = Directory(appDocDir.path+'/experiment_settings/');
+    Directory experimentDir = Directory(appDocDir.path+'/' + dirName + '/');
     if (!await experimentDir.exists()){
       experimentDir = await experimentDir.create();
     }
     
-    File experimentFile = new File(experimentDir.path + '/' + fileName + '.csv');
+    File experimentFile = new File(experimentDir.path + fileName + '.csv');
     if (await experimentFile.exists()){
       return false;
     }
+
     await experimentFile.writeAsString(this.toString());
     return true;
   }
 
 
-  // Overwrites data to existing file
+  // Load the data from a file into the object synchronously
+  void loadFromFile (File f);
+
+    // Overwrites data to existing file
   Future<bool> overwriteFile (File f) async {
     if (await f.exists()){
       await f.writeAsString(this.toString());
@@ -60,6 +45,66 @@ class ExperimentSettings {
     }
     return false;
   }
+
+
+}
+
+class AmperometrySettings extends ExperimentSettings {
+  double runtime;
+
+  AmperometrySettings({runtime, initialVoltage, sampleInterval, gainSetting, electrode}): super(initialVoltage, sampleInterval, gainSetting, electrode){
+    this.runtime = runtime;
+  }
+
+  // toString formats like a csv file for ease of writing to file
+  @override
+  String toString () {
+    String firstRow = 'initialVoltage,sampleInterval,runtime,gainSetting,electrode\n';
+    String secondRow = initialVoltage.toString() + ',' +  sampleInterval.toString() + ',' + runtime.toString() + ','
+                       + gainSetting.toString().split('.').last + ',' + electrode.toString().split('.').last;
+    return firstRow + secondRow;
+  }
+  
+  
+
+  @override
+  void loadFromFile (File f){
+    String fileData = f.readAsStringSync();
+    print(fileData);
+    List<String> fileInfo = fileData.split('\n')[1].split(',');
+    initialVoltage = double.parse(fileInfo[0]);
+    sampleInterval = double.parse(fileInfo[1]);
+    runtime = double.parse(fileInfo[2]);
+    gainSetting = GainSettings.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[3]);
+    electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[4]);
+  }
+  
+
+}
+
+// A class for holding experiment settings variables
+class VoltammetrySettings extends ExperimentSettings{
+  double vertexVoltage, finalVoltage, scanRate, sweepSegments;
+
+  VoltammetrySettings({initialVoltage, vertexVoltage, lowVoltage, finalVoltage, scanRate, 
+                      sweepSegments, sampleInterval, gainSetting, electrode}): super(initialVoltage, sampleInterval, gainSetting, electrode){
+      this.vertexVoltage = vertexVoltage;
+      this.finalVoltage = finalVoltage;
+      this.scanRate = scanRate;
+      this.sweepSegments = sweepSegments;
+  }
+
+  // toString formats like a csv file for ease of writing to file
+  @override
+  String toString () {
+    String firstRow = 'initialVoltage,vertexVoltage,finalVoltage,scanRate,sweepSegments,sampleInterval,gainSetting,electrode\n';
+    String secondRow = initialVoltage.toString() + ',' + vertexVoltage.toString()  + ',' + finalVoltage.toString() + ',' 
+                       + scanRate.toString() + ',' + sweepSegments.toString() + ',' + sampleInterval.toString() + ','
+                       + gainSetting.toString().split('.').last + ',' + electrode.toString().split('.').last;
+    return firstRow + secondRow;
+  }
+
+
 
   // Load the data from a file into the object synchronously
   void loadFromFile (File f){
@@ -71,6 +116,8 @@ class ExperimentSettings {
     scanRate = double.parse(fileInfo[3]);
     sweepSegments = double.parse(fileInfo[4]);
     sampleInterval = double.parse(fileInfo[5]);
+    gainSetting = GainSettings.values.firstWhere((val) => val.toString().split('.').last == fileInfo[6]);
+    electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[7]);
   }
 
 }
