@@ -13,12 +13,6 @@ class AdvancedSetup extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Advanced Setup'),
-        leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-              )
         ),
       body: SetupForm(file: f, fileType: t)
     );
