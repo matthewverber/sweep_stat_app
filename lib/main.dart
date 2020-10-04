@@ -148,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     _buildSecondaryButton("RECENT RESULTS",
                         null), // TODO: Needs recent results widget route
-                    _buildSecondaryButton("LOAD CONFIG", LoadConfigWrapper()),
+                    _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
                     _buildSecondaryButton("BLUETOOTH CONNECTION",
                         null), // TODO: Needs bluetooth widget route],))
                   ],
