@@ -5,28 +5,6 @@ import 'dart:io';
 import 'package:share/share.dart';
 
 // NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
-void main() {
-  runApp(MyApp());
-}
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Advanced Setup',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        buttonTheme: ButtonThemeData(
-          buttonColor: Colors.blue,
-          textTheme: ButtonTextTheme.primary
-        )
-      ),
-      home: AdvancedSetup()
-    );
-
-  }
-}
-
 class AdvancedSetup extends StatelessWidget {
   final File f;
   final String t;
