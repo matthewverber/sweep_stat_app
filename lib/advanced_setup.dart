@@ -159,7 +159,7 @@ class _SetupFormState extends State<SetupForm> {
      // Make sure name is valid
     if (name != null){
     // Write to file and alert user using experimentSettings' writeToFile
-      if (await experimentSettings.writeToFile(name, expType == 'CV' ? 'cv_experiments' : 'amp_experiments')){
+      if (await experimentSettings.writeToFile(name, expType == 'CV' ? 'cv_configs' : 'amp_configs')){
         Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
       } else {
       // If false returned, file already exists

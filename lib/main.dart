@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'advanced_setup.dart';
 import 'load_configuration.dart';
+import 'recent_results.dart';
 
 void main() {
   runApp(MyApp());
@@ -147,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     _buildSecondaryButton("RECENT RESULTS",
-                        null), // TODO: Needs recent results widget route
+                        RecentResults()), // TODO: Needs recent results widget route
                     _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
                     _buildSecondaryButton("BLUETOOTH CONNECTION",
                         null), // TODO: Needs bluetooth widget route],))
