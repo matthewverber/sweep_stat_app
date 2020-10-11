@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sweep_stat_app/advanced_setup.dart';
-import 'package:sweep_stat_app/analysis.dart';
-import 'package:sweep_stat_app/experiment.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,51 +27,27 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: AdvancedSetup(),
+      home: MyHomePage(),
     );
   }
 }
 
-//class MyHomePage extends StatefulWidget {
-//  MyHomePage({Key key, this.title}) : super(key: key);
-//
-//  final String title;
-//
-//  @override
-//  _MyHomePageState createState() => _MyHomePageState();
-//}
-//
-//class _MyHomePageState extends State<MyHomePage> {
-//  @override
-//  Widget build(BuildContext context) {
-//    return Scaffold(
-//      body: SafeArea(
-//        child: RaisedButton(
-//          onPressed: () async {
-//          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => {AdvancedSetup()}));
-//            //            ExperimentSettings testValues = ExperimentSettings(
-////              initialVoltage: 0.0,
-////              highVoltage: 5.0,
-////              lowVoltage: 0.0,
-////              finalVoltage: 5.0,
-////              scanRate: .05,
-////              sweepSegments: .05,
-////              sampleInterval: 5.0,
-////              isAutoSens: false,
-////              isFinalE: false,
-////              isAuxRecording: false,
-////              projectName: "OmegaTest",
-////              projectDescription: "None"
-////            );
-////            // TODO: Move to tests
-////            Navigator.push(
-////                context,
-////                MaterialPageRoute(
-////                    builder: (BuildContext context) =>
-////                        AnalysisScreen(experiment: Experiment(testValues))));
-//          },
-//        ),
-//      ),
-//    );
-//  }
-//}
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: SafeArea(
+      child: RaisedButton(onPressed: () async {
+        Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => AdvancedSetup()));
+      }),
+    ));
+  }
+}

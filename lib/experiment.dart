@@ -54,7 +54,7 @@ class DataPoints {
 
 // A class for holding experiment settings variables
 class ExperimentSettings {
-  double _initialVoltage, _highVoltage, _lowVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval;
+  double _initialVoltage, _highVoltage, _lowVoltage, _vertexVoltage, finalVoltage, scanRate, sweepSegments, sampleInterval;
   bool isAutoSens, isFinalE, isAuxRecording, isPositivePolarity;
   String projectName, projectDescription;
 
@@ -62,6 +62,7 @@ class ExperimentSettings {
       {initialVoltage = 0.0,
         highVoltage = 0.01,
         lowVoltage = 0.0,
+        vertexVoltage = 0.01,
         finalVoltage = 0.0,
         scanRate = 0.0,
         sweepSegments = 0.0,
@@ -90,6 +91,10 @@ class ExperimentSettings {
   // Getters and setters for low/high voltage to ensure that low voltage is always lower than high voltage
   double get highVoltage {
     return _highVoltage;
+  }
+
+  double get vertexVoltage {
+    return _vertexVoltage;
   }
 
   set highVoltage(double volt) {
@@ -151,17 +156,17 @@ class ExperimentSettings {
     source: https://pub.dev/packages/path_provider
     TODO: testing saving and time it takes to save
   */
-  Future<bool> writeToFile(Directory experimentDir) async {
-    try {
-      File experimentFile = new File(experimentDir.path + '/' + '${this.projectName}_config' + '.csv');
-      await experimentFile.writeAsString(this.toString());
-      return true;
-    } catch (IOException) {
-      print(IOException.toString());
-      print("Fail to save file!");
-      return false;
-    }
-  }
+//  Future<bool> writeToFile(Directory experimentDir) async {
+//    try {
+//      File experimentFile = new File(experimentDir.path + '/' + '${this.projectName}_config' + '.csv');
+//      await experimentFile.writeAsString(this.toString());
+//      return true;
+//    } catch (IOException) {
+//      print(IOException.toString());
+//      print("Fail to save file!");
+//      return false;
+//    }
+//  }
 }
 
 // Exception thrown when low voltage >= high voltage

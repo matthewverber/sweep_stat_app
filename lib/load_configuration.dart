@@ -4,44 +4,6 @@ import 'package:path_provider/path_provider.dart';
 import 'advanced_setup.dart';
 
 // Widget responsible for selecting which config file a user wants to be loaded from the existing files
-
-
-// NOTE: I'm using the main function and the MyApp class for testing until we have a main page implemented
-void main() {
-  runApp(MyApp());
-}
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        buttonTheme: ButtonThemeData(
-          buttonColor: Colors.blue,
-          textTheme: ButtonTextTheme.primary
-        )
-      ),
-      home: MaterialApp(
-        title: 'Load Configuration',
-        home: Scaffold(
-          appBar: AppBar(
-            title: Text('Load Configuration'),
-            leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-              )
-            ),
-          body: LoadConfig()
-        )
-      )
-    );
-  }
-}
-
 class LoadConfig extends StatefulWidget {
   const LoadConfig({Key key}) : super(key: key);
   @override

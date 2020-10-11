@@ -48,15 +48,15 @@ class _FileNamePopupState extends State<FileNamePopup> {
       } else {
         return AlertDialog(
             content: Column(
-              children: [
-                Text("There was a problem saving!"),
-                RaisedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Ok!"))
-              ],
-            ));
+          children: [
+            Text("There was a problem saving!"),
+            RaisedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("Ok!"))
+          ],
+        ));
       }
     } else {
       return AlertDialog(
@@ -160,10 +160,10 @@ class AnalysisScreen extends StatefulWidget {
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // TODO: Move spots to Experiment class !
   LineChartBarData data_L;
   LineChartBarData data_R;
   double i, j; // TODO temp: remove later
+  Timer callbackTimer;
 
   Future<bool> saveLocally() async {
     return await widget.experiment.saveExperiment();
@@ -192,6 +192,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     i = widget.experiment.settings.lowVoltage; // TODO: temp remove, later
     j = widget.experiment.settings.lowVoltage;
     super.initState();
+  }
+
+  void dispose() {
+    super.dispose();
+    callbackTimer.cancel();
   }
 
   bool locki = false;
@@ -237,16 +242,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
                   child: LineChart(LineChartData(
-                      maxX: widget.experiment.settings.highVoltage,
+                      maxX: widget.experiment.settings.vertexVoltage,
                       minX: widget.experiment.settings.lowVoltage,
                       clipData: FlClipData.vertical(),
                       lineBarsData: [data_L, data_R],
                       axisTitleData: FlAxisTitleData(
                         show: true,
                         leftTitle:
-                        AxisTitle(showTitle: true, titleText: "Current i (AM)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                            AxisTitle(showTitle: true, titleText: "Current i (AM)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         bottomTitle:
-                        AxisTitle(showTitle: true, titleText: "Potential E (V)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                            AxisTitle(showTitle: true, titleText: "Potential E (V)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         topTitle: AxisTitle(
                             showTitle: true, titleText: "Current Vs Potential", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                       ))),
@@ -277,9 +282,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     color: Colors.blue,
                     child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
                     onPressed: () {
-                      Timer.periodic(new Duration(milliseconds: 20), (timer) {
+                      callbackTimer = Timer.periodic(new Duration(milliseconds: 20), (timer) {
                         setState(() {
-                          if (i > widget.experiment.settings.highVoltage) {
+                          if (i > widget.experiment.settings.vertexVoltage) {
                             return;
                           }
                           widget.experiment.dataL.add(new FlSpot(i + 0.0, i * i));
