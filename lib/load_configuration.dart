@@ -18,4 +18,3 @@ class LoadConfig extends StatelessWidget {
     );
   }
 }
-

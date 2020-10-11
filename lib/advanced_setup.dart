@@ -1,5 +1,6 @@
-
 import 'package:flutter/material.dart';
+import 'package:sweep_stat_app/analysis.dart';
+import 'package:sweep_stat_app/experiment.dart';
 import 'experiment_settings.dart';
 import 'dart:io';
 import 'package:share/share.dart';
@@ -54,7 +55,7 @@ class _SetupFormState extends State<SetupForm> {
         validator: (String value) {
           if (value.isEmpty){
             return 'Please Enter a Value';
-          } 
+          }
           return null;
         },
         onSaved: (String val) {
@@ -94,7 +95,7 @@ class _SetupFormState extends State<SetupForm> {
         ];
         experimentSettings = amperometrySettings;
         expType = 'Amperometry';
-        
+
       }
 
     } else {
@@ -211,7 +212,7 @@ class _SetupFormState extends State<SetupForm> {
                   items: [
                     DropdownMenuItem(
                       value: 'CV',
-                      child: Text('CV')), 
+                      child: Text('CV')),
                       DropdownMenuItem(
                       value: 'Amperometry',
                       child: Text('Amperometry'))]
@@ -241,14 +242,14 @@ class _SetupFormState extends State<SetupForm> {
                               Scaffold.of(context).showSnackBar(SnackBar(content: Text('File Updated')));
                             } else {
                               Scaffold.of(context).showSnackBar(SnackBar(content: Text('Error updating file')));
-                            }  
+                            }
                           }
                         }
                       },
                       child: Text('Save')
                     )
                   )
-                    
+
                 ]
               ),
               if (file != null)
@@ -270,7 +271,7 @@ class _SetupFormState extends State<SetupForm> {
                         child: Text('Save as New Config')
                     )
                   )
-                    
+
                 ]
               )
             ]
@@ -287,6 +288,7 @@ class _SetupFormState extends State<SetupForm> {
 */
 class ValueInput extends StatelessWidget {
   ValueInput(this.text, this.callback, this.value);
+
   final String text, value; // Text is displayed name, units is the displayed unit val at end
   final Function callback; // Callback called on save
 
