@@ -1,4 +1,4 @@
-package com.unc.edu.sweet_stat_app
+package com.unc.edu.sweep_stat_app
 
 import io.flutter.embedding.android.FlutterActivity
 

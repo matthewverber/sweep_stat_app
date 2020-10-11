@@ -8,6 +8,8 @@ import 'package:share/share.dart';
 import 'package:sweep_stat_app/experiment.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import 'experiment_settings.dart';
+
 class FileNamePopup extends StatefulWidget {
   // TODO: Might not be needed since we are getting a project name and can have a generic _config _experimentube
 
@@ -48,15 +50,15 @@ class _FileNamePopupState extends State<FileNamePopup> {
       } else {
         return AlertDialog(
             content: Column(
-          children: [
-            Text("There was a problem saving!"),
-            RaisedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text("Ok!"))
-          ],
-        ));
+              children: [
+                Text("There was a problem saving!"),
+                RaisedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Ok!"))
+              ],
+            ));
       }
     } else {
       return AlertDialog(
@@ -133,10 +135,10 @@ class ExperimentSettingsValues extends StatelessWidget {
             ),
             Divider(),
             settingsRow("Initial Voltage", settings.initialVoltage, "V"),
-            settingsRow("Final Voltage", settings.finalVoltage, "V"),
-            settingsRow("Vertex Voltage", settings.highVoltage, "V"),
-            settingsRow("Scan Rate", settings.scanRate, "V/s"),
-            settingsRow("Sweep Segments", settings.sweepSegments, ""),
+            settingsRow("Final Voltage", 5, "V"), // settings.finalVoltage, "V"),
+            settingsRow("Vertex Voltage", 5, "V"), // settings.highVoltage, "V"),
+            settingsRow("Scan Rate", .05, "V/s"), // settings.scanRate, "V/s"),
+            settingsRow("Sweep Segments", .05, ""), //  settings.sweepSegments, ""),
             settingsRow("Sample Interval", settings.sampleInterval, "V")
           ],
         ));
@@ -173,10 +175,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     bool didSave = await saveLocally();
     if (didSave) {
       Directory experimentDir = await widget.experiment.getOrCreateCurrentDirectory();
-      Share.shareFiles([
-        '${experimentDir.path}/${widget.experiment.settings.projectName}_config.csv',
-        '${experimentDir.path}/${widget.experiment.settings.projectName}_data.csv'
-      ]);
+      Share.shareFiles(['${experimentDir.path}/temper/temp.csv']);
       return true;
     } else {
       return false;
@@ -189,8 +188,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       isCurved: true,
     );
     data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
-    i = widget.experiment.settings.lowVoltage; // TODO: temp remove, later
-    j = widget.experiment.settings.lowVoltage;
+    i = 0.0; // TODO: temp remove, later
+    j = 0.0;
     super.initState();
   }
 
@@ -242,16 +241,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
                   child: LineChart(LineChartData(
-                      maxX: widget.experiment.settings.vertexVoltage,
-                      minX: widget.experiment.settings.lowVoltage,
+                      maxX: 5,
+                      // widget.experiment.settings.vertexVoltage,
+                      minX: 0,
+                      // widget.experiment.settings.lowVoltage,
                       clipData: FlClipData.vertical(),
                       lineBarsData: [data_L, data_R],
                       axisTitleData: FlAxisTitleData(
                         show: true,
                         leftTitle:
-                            AxisTitle(showTitle: true, titleText: "Current i (AM)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        AxisTitle(showTitle: true, titleText: "Current i (AM)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         bottomTitle:
-                            AxisTitle(showTitle: true, titleText: "Potential E (V)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        AxisTitle(showTitle: true, titleText: "Potential E (V)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         topTitle: AxisTitle(
                             showTitle: true, titleText: "Current Vs Potential", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                       ))),
@@ -284,7 +285,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     onPressed: () {
                       callbackTimer = Timer.periodic(new Duration(milliseconds: 20), (timer) {
                         setState(() {
-                          if (i > widget.experiment.settings.vertexVoltage) {
+                          if (i > 5) {
                             return;
                           }
                           widget.experiment.dataL.add(new FlSpot(i + 0.0, i * i));

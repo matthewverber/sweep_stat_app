@@ -1,6 +1,6 @@
-# sweet_stat_app
+# sweep_stat_app
 
-Project focused on support for the sweetstat
+Project focused on support for the sweepstat
 
 ## Getting Started
 
