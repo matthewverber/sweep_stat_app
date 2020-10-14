@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'guided_setup.dart';
 import 'advanced_setup.dart';
 import 'load_configuration.dart';
 import 'recent_results.dart';
@@ -121,8 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildPrimaryButton("GUIDED SETUP",
-                        null), // TODO: Needs to be updated with guided setup widget route
+                    _buildPrimaryButton("GUIDED SETUP", GuidedSetup()),
                     _buildPrimaryButton("ADVANCED SETUP", AdvancedSetup()),
                   ],
                 ),
