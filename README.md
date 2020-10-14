@@ -1,6 +1,6 @@
-# sweet_stat_app
+# sweep_stat_app
 
-Project focused on support for the sweetstat
+A companion app for the SweepStat device, available on iOS and Android.
 
 ## Getting Started
 
