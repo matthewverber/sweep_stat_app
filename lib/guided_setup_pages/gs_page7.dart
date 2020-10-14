@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:sweep_stat_app/experiment_settings.dart';
 
 class GSPage7 extends StatefulWidget {
   final Function callback;
-  final String selected;
+  final Electrode selected;
   const GSPage7({Key key, this.callback, this.selected}) : super(key: key);
   @override
   GSPage7State createState() => GSPage7State();
 }
 
 class GSPage7State extends State<GSPage7> {
-  String _refElectrode;
+  Electrode _refElectrode;
 
   void initState() {
     super.initState();
@@ -39,9 +40,9 @@ class GSPage7State extends State<GSPage7> {
               title: Text("Pseudo-Reference Electrode",
                   style: Theme.of(context).textTheme.bodyText2),
               leading: Radio(
-                  value: 'pseudo',
+                  value: Electrode.pseudoref,
                   groupValue: _refElectrode,
-                  onChanged: (String value) {
+                  onChanged: (Electrode value) {
                     widget.callback(value);
                     setState(() {
                       _refElectrode = value;
@@ -51,9 +52,9 @@ class GSPage7State extends State<GSPage7> {
               title: Text("Silver / Silver Chloride Electrode",
                   style: Theme.of(context).textTheme.bodyText2),
               leading: Radio(
-                  value: 'silver',
+                  value: Electrode.silver,
                   groupValue: _refElectrode,
-                  onChanged: (String value) {
+                  onChanged: (Electrode value) {
                     widget.callback(value);
                     setState(() {
                       _refElectrode = value;
@@ -63,9 +64,9 @@ class GSPage7State extends State<GSPage7> {
               title: Text("Saturated Calomel Electrode",
                   style: Theme.of(context).textTheme.bodyText2),
               leading: Radio(
-                  value: 'saturated',
+                  value: Electrode.calomel,
                   groupValue: _refElectrode,
-                  onChanged: (String value) {
+                  onChanged: (Electrode value) {
                     widget.callback(value);
                     setState(() {
                       _refElectrode = value;
@@ -75,9 +76,9 @@ class GSPage7State extends State<GSPage7> {
               title: Text("Standard Hydrogen Electrode",
                   style: Theme.of(context).textTheme.bodyText2),
               leading: Radio(
-                  value: 'standard',
+                  value: Electrode.hydrogen,
                   groupValue: _refElectrode,
-                  onChanged: (String value) {
+                  onChanged: (Electrode value) {
                     widget.callback(value);
                     setState(() {
                       _refElectrode = value;
