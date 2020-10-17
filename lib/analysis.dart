@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:share/share.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sweep_stat_app/experiment.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -14,8 +15,9 @@ class FileNamePopup extends StatefulWidget {
   // TODO: Might not be needed since we are getting a project name and can have a generic _config _experimentube
 
   final Function onSave;
+  final Function onConfirm;
 
-  FileNamePopup({Key key, this.onSave}) : super(key: key);
+  FileNamePopup({Key key, this.onSave, this.onConfirm}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -41,7 +43,7 @@ class _FileNamePopupState extends State<FileNamePopup> {
               Text("Save Complete!"),
               RaisedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(widget.onConfirm());
                   },
                   child: Text("Ok!"))
             ],
@@ -54,7 +56,7 @@ class _FileNamePopupState extends State<FileNamePopup> {
                 Text("There was a problem saving!"),
                 RaisedButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(widget.onConfirm());
                     },
                     child: Text("Ok!"))
               ],
@@ -79,7 +81,7 @@ class _FileNamePopupState extends State<FileNamePopup> {
                     }
                   },
                   onSaved: (String fileName) {
-                    Future<bool> saved = widget.onSave(_textController.value.toString());
+                    Future<bool> saved = widget.onSave(_textController.text.toString());
                     saved.then((bool didSave) {
                       setState(() {
                         saving = false;
@@ -166,12 +168,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   LineChartBarData data_R;
   double i, j; // TODO temp: remove later
   Timer callbackTimer;
+  bool isSaving = false;
 
-  Future<bool> saveLocally() async {
-    return await widget.experiment.saveExperiment();
+  Future<bool> saveLocally(String fileName) async {
+    return await widget.experiment.saveExperiment(fileName);
   }
 
   Future<bool> shareFiles() async {
+    /*
     bool didSave = await saveLocally();
     if (didSave) {
       Directory experimentDir = await widget.experiment.getOrCreateCurrentDirectory();
@@ -179,7 +183,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return true;
     } else {
       return false;
-    }
+    }*/
   }
 
   void initState() {
@@ -237,6 +241,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           child: Padding(
             padding: EdgeInsets.only(top: 10, left: 5),
             child: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if (isSaving) FileNamePopup(onSave: saveLocally, onConfirm: (){
+                setState(() {
+                  isSaving = false;
+                });
+              },),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
@@ -263,17 +272,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
-                      if (await saveLocally()) {
-                        _scaffoldKey.currentState.showSnackBar(SnackBar(
-                          content: Text("Saved successfully!"),
-                          duration: Duration(seconds: 1),
-                        ));
-                      } else {
-                        _scaffoldKey.currentState.showSnackBar(SnackBar(
-                          content: Text("Failed to save, please try again!"),
-                          duration: Duration(seconds: 1),
-                        ));
-                      }
+                      setState(() {
+                        isSaving = true;
+                      });
                     },
                     child: Text(
                       "Save",
@@ -294,17 +295,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                           j += .3;
                         });
                       });
+                      print(widget.experiment.toString());
                     }),
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
-                      // showDialod
+                      await Share.share(widget.experiment.toString());
+                      /*
                       if (!(await shareFiles())) {
                         _scaffoldKey.currentState.showSnackBar(SnackBar(
                           content: Text("Failed to save, please try again!"),
                           duration: Duration(seconds: 3),
                         ));
-                      }
+                      }*/
                     },
                     child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15)))
               ]),

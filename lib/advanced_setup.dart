@@ -283,7 +283,9 @@ class _SetupFormState extends State<SetupForm> {
                     Expanded(flex: 5, child: RaisedButton(onPressed: _saveNewFile, child: Text('Save as New Config')))
                   ])
               ]),
-            )));
+            )
+          )
+        );
   }
 }
 

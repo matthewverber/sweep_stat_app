@@ -70,7 +70,6 @@ class AmperometrySettings extends ExperimentSettings {
   @override
   void loadFromFile (File f){
     String fileData = f.readAsStringSync();
-    print(fileData);
     List<String> fileInfo = fileData.split('\n')[1].split(',');
     initialVoltage = double.parse(fileInfo[0]);
     sampleInterval = double.parse(fileInfo[1]);
@@ -86,7 +85,7 @@ class AmperometrySettings extends ExperimentSettings {
 class VoltammetrySettings extends ExperimentSettings{
   double vertexVoltage, finalVoltage, scanRate, sweepSegments;
 
-  VoltammetrySettings({initialVoltage, vertexVoltage, lowVoltage, finalVoltage, scanRate, 
+  VoltammetrySettings({initialVoltage, vertexVoltage, finalVoltage, scanRate, 
                       sweepSegments, sampleInterval, gainSetting, electrode}): super(initialVoltage, sampleInterval, gainSetting, electrode){
       this.vertexVoltage = vertexVoltage;
       this.finalVoltage = finalVoltage;
