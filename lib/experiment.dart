@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:path_provider/path_provider.dart';
@@ -62,8 +61,7 @@ class Experiment {
                       'Sample Interval (V) = ' + a.sampleInterval.toString() + '\n' +
                       'Runtime (S) = ' + a.runtime.toString() + '\n\n';
     }
-
-    returnString += this.dataToString().reduce((value, element) => value + element + '\n');
+    returnString += this.dataToString().join('\n');
     return returnString;
 
   }
@@ -87,12 +85,51 @@ class Experiment {
     return true;
   }
 
-  static Future<Experiment> loadFromFile(File f, String expType) {
-    ExperimentSettings eS;
+  static Future<Experiment> loadFromFile(File f, String expType) async{
+    List<String> lines = await f.readAsLines();
+    Experiment e;
+    int startLine;
     if (expType == 'CV'){
+      VoltammetrySettings v = new VoltammetrySettings();
+      v.gainSetting = GainSettings.values.firstWhere((val)=> val.toString().split('.').last == lines[1].split(': ').last);
+      v.electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == lines[2].split(': ').last);
+      v.initialVoltage = double.parse(lines[4].split(' = ').last);
+      v.vertexVoltage = double.parse(lines[5].split(' = ').last);
+      v.finalVoltage = double.parse(lines[6].split(' = ').last);
+      v.scanRate = double.parse(lines[7].split(' = ').last);
+      v.sweepSegments = double.parse(lines[8].split(' = ').last);
+      v.sampleInterval = double.parse(lines[9].split(' = ').last);
+      e = new Experiment(v);
+      startLine = 12;
 
+    } else {
+      AmperometrySettings a = new AmperometrySettings();
+      a.gainSetting = GainSettings.values.firstWhere((val)=> val.toString().split('.').last == lines[1].split(': ').last);
+      a.electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == lines[2].split(': ').last);
+      a.initialVoltage = double.parse(lines[4].split(' = ').last);
+      a.sampleInterval = double.parse(lines[5].split(' = ').last);
+      a.runtime = double.parse(lines[6].split(' = ').last);
+      e = new Experiment(a);
+      startLine = 9;
     }
-    Experiment e = new Experiment(eS);
+
+      List<FlSpot> dataL = [];
+      List<FlSpot> dataR = [];
+      int midpoint = ((lines.length - startLine)/2).floor() + startLine;
+      for(int i = startLine; i < lines.length; i++){
+        double potential = double.parse(lines[i].split(', ').first);
+        double current = double.parse(lines[i].split(', ').last);
+        FlSpot point = FlSpot(potential, current);
+        if (i < midpoint){
+          dataL.add(point);
+        } else {
+          dataR.add(point);
+        }
+      }
+      e.dataL= dataL;
+      e.dataR = dataR;
+      return e;
+
   }
 
 

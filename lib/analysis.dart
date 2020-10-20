@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:share/share.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sweep_stat_app/experiment.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -69,6 +67,7 @@ class _FileNamePopupState extends State<FileNamePopup> {
           child: Column(
             children: [
               TextFormField(
+                  controller: _textController,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     labelText: "File Name",
@@ -122,10 +121,33 @@ class ExperimentSettingsValues extends StatelessWidget {
 
     Widget settingsRow(String settingName, dynamic settingValue, String unitSymbol) {
       return Row(
-          children: [Expanded(child: settingsText('$settingName')), settingsText('${settingValue} $unitSymbol'), settingsText('')],
+          children: [Expanded(child: settingsText('$settingName')), settingsText('${settingValue} $unitSymbol')],
           mainAxisAlignment: MainAxisAlignment.spaceBetween);
     }
 
+    List<Widget> settingsValues; 
+    if (settings is VoltammetrySettings){
+      settingsValues = [
+        //Expanded(child:settingsText('Cyclic Voltammetry')),
+        settingsRow("Initial Voltage", settings.initialVoltage, "V"),
+        settingsRow("Vertex Voltage", (settings as VoltammetrySettings).vertexVoltage, "V"),  // settings.highVoltage, "V"),
+        settingsRow("Final Voltage", (settings as VoltammetrySettings).finalVoltage, "V"),  // settings.highVoltage, "V"),
+        settingsRow("Scan Rate", (settings as VoltammetrySettings).scanRate, "V/s"), // settings.scanRate, "V/s"),
+        settingsRow("Sweep Segments", (settings as VoltammetrySettings).sweepSegments, ""), //  settings.sweepSegments, ""),
+        settingsRow("Sample Interval", settings.sampleInterval, "V"),
+        settingsRow("Gain Setting", settings.gainSetting.describeEnum(), ""),
+        settingsRow("Electrode", settings.electrode.toString().split('.').last, "")
+      ];
+    } else {
+      settingsValues = [
+        //Expanded(child:settingsText('Amperometry')),
+        settingsRow("Initial Voltage", settings.initialVoltage, "V"),
+        settingsRow("Sample Interval", settings.sampleInterval, "V"),
+        settingsRow("Runtime", (settings as AmperometrySettings).runtime, "S"),
+        settingsRow("Gain Setting", settings.gainSetting.describeEnum(), ""),
+        settingsRow("Electrode", settings.electrode.toString().split('.').last, "")
+      ];
+    }
     return Padding(
         padding: EdgeInsets.only(left: 30, right: 30),
         child: Column(
@@ -136,12 +158,7 @@ class ExperimentSettingsValues extends StatelessWidget {
               style: TextStyle(fontSize: 25),
             ),
             Divider(),
-            settingsRow("Initial Voltage", settings.initialVoltage, "V"),
-            settingsRow("Final Voltage", 5, "V"), // settings.finalVoltage, "V"),
-            settingsRow("Vertex Voltage", 5, "V"), // settings.highVoltage, "V"),
-            settingsRow("Scan Rate", .05, "V/s"), // settings.scanRate, "V/s"),
-            settingsRow("Sweep Segments", .05, ""), //  settings.sweepSegments, ""),
-            settingsRow("Sample Interval", settings.sampleInterval, "V")
+            ...settingsValues
           ],
         ));
   }
@@ -174,17 +191,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return await widget.experiment.saveExperiment(fileName);
   }
 
-  Future<bool> shareFiles() async {
-    /*
-    bool didSave = await saveLocally();
-    if (didSave) {
-      Directory experimentDir = await widget.experiment.getOrCreateCurrentDirectory();
-      Share.shareFiles(['${experimentDir.path}/temper/temp.csv']);
-      return true;
-    } else {
-      return false;
-    }*/
-  }
 
   void initState() {
     data_L = LineChartBarData(
@@ -241,7 +247,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           child: Padding(
             padding: EdgeInsets.only(top: 10, left: 5),
             child: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if (isSaving) FileNamePopup(onSave: saveLocally, onConfirm: (){
+              if (this.mounted && isSaving) FileNamePopup(onSave: saveLocally, onConfirm: (){
                 setState(() {
                   isSaving = false;
                 });
@@ -259,9 +265,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       axisTitleData: FlAxisTitleData(
                         show: true,
                         leftTitle:
-                        AxisTitle(showTitle: true, titleText: "Current i (AM)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        AxisTitle(showTitle: true, titleText: widget.experiment.settings.gainSetting == GainSettings.nA10 ? "Current/nA" : "Current/µA", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         bottomTitle:
-                        AxisTitle(showTitle: true, titleText: "Potential E (V)", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        AxisTitle(showTitle: true, titleText: "Potential/V", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         topTitle: AxisTitle(
                             showTitle: true, titleText: "Current Vs Potential", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                       ))),
@@ -301,13 +307,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     color: Colors.blue,
                     onPressed: () async {
                       await Share.share(widget.experiment.toString());
-                      /*
-                      if (!(await shareFiles())) {
-                        _scaffoldKey.currentState.showSnackBar(SnackBar(
-                          content: Text("Failed to save, please try again!"),
-                          duration: Duration(seconds: 3),
-                        ));
-                      }*/
                     },
                     child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15)))
               ]),

@@ -1,7 +1,36 @@
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-enum GainSettings {macro, micro}
+enum GainSettings {nA10, uA1, mA1}
+extension GainExtension on GainSettings {
+
+  String describeEnum() {
+    switch(this) {
+      case GainSettings.nA10:
+        return "10 nA/V";
+      case GainSettings.mA1:
+        return "1 mA/V";
+      case GainSettings.uA1:
+        return "1 uA/V";
+
+    }
+    return null;
+  }
+
+  static GainSettings stringToEnum(String s) {
+    switch(s) {
+      case "10 nA/V":
+        return GainSettings.nA10;
+      case "1 mA/V":
+        return GainSettings.mA1;
+      case "1 uA/V":
+        return GainSettings.uA1;
+    }
+    return null;
+
+  }
+}
+
 enum Electrode {pseudoref, silver, calomel, hydrogen}
 
 
@@ -61,7 +90,7 @@ class AmperometrySettings extends ExperimentSettings {
   String toString () {
     String firstRow = 'initialVoltage,sampleInterval,runtime,gainSetting,electrode\n';
     String secondRow = initialVoltage.toString() + ',' +  sampleInterval.toString() + ',' + runtime.toString() + ','
-                       + gainSetting.toString().split('.').last + ',' + electrode.toString().split('.').last;
+                       + gainSetting.describeEnum() + ',' + electrode.toString().split('.').last;
     return firstRow + secondRow;
   }
   
@@ -74,7 +103,7 @@ class AmperometrySettings extends ExperimentSettings {
     initialVoltage = double.parse(fileInfo[0]);
     sampleInterval = double.parse(fileInfo[1]);
     runtime = double.parse(fileInfo[2]);
-    gainSetting = GainSettings.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[3]);
+    gainSetting = GainExtension.stringToEnum(fileInfo[3]);
     electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[4]);
   }
   
@@ -99,7 +128,7 @@ class VoltammetrySettings extends ExperimentSettings{
     String firstRow = 'initialVoltage,vertexVoltage,finalVoltage,scanRate,sweepSegments,sampleInterval,gainSetting,electrode\n';
     String secondRow = initialVoltage.toString() + ',' + vertexVoltage.toString()  + ',' + finalVoltage.toString() + ',' 
                        + scanRate.toString() + ',' + sweepSegments.toString() + ',' + sampleInterval.toString() + ','
-                       + gainSetting.toString().split('.').last + ',' + electrode.toString().split('.').last;
+                       + gainSetting.describeEnum() + ',' + electrode.toString().split('.').last;
     return firstRow + secondRow;
   }
 
@@ -115,7 +144,7 @@ class VoltammetrySettings extends ExperimentSettings{
     scanRate = double.parse(fileInfo[3]);
     sweepSegments = double.parse(fileInfo[4]);
     sampleInterval = double.parse(fileInfo[5]);
-    gainSetting = GainSettings.values.firstWhere((val) => val.toString().split('.').last == fileInfo[6]);
+    gainSetting = GainExtension.stringToEnum(fileInfo[6]);
     electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[7]);
   }
 
