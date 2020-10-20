@@ -40,7 +40,7 @@ class GSPage3State extends State<GSPage3> {
           ListTile(
               title: Text("Macroelectrode (r > 25 µm)"),
               leading: Radio(
-                  value: GainSettings.macro,
+                  value: GainSettings.nA10,
                   groupValue: _gainValue,
                   onChanged: (GainSettings value) {
                     widget.callback(value);
@@ -51,7 +51,7 @@ class GSPage3State extends State<GSPage3> {
           ListTile(
               title: Text("Microelectrode (r < 25 µm)"),
               leading: Radio(
-                  value: GainSettings.micro,
+                  value: GainSettings.uA1,
                   groupValue: _gainValue,
                   onChanged: (GainSettings value) {
                     widget.callback(value);

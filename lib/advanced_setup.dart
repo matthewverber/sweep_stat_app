@@ -77,7 +77,7 @@ class _SetupFormState extends State<SetupForm> {
           new ValueInput('Sweep Segments', (double d) => {voltammetrySettings.sweepSegments = d}, voltammetrySettings.sweepSegments.toString()),
           new ValueInput('Sample Interval (V)', (double d) => {voltammetrySettings.sampleInterval = d}, voltammetrySettings.sampleInterval.toString()),
           new DropDownInput(
-              labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+              labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
               values: GainSettings.values.toList(),
               hint: 'Select Gain Setting',
               initialVal: voltammetrySettings.gainSetting,
@@ -100,7 +100,7 @@ class _SetupFormState extends State<SetupForm> {
           new ValueInput('Sample Interval (V)', (double d) => {amperometrySettings.sampleInterval = d}, amperometrySettings.sampleInterval.toString()),
           new ValueInput('Run time (S)', (double d) => {amperometrySettings.runtime = d}, amperometrySettings.runtime.toString()),
           new DropDownInput(
-              labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+              labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
               values: GainSettings.values.toList(),
               hint: 'Select Gain Setting',
               initialVal: amperometrySettings.gainSetting,
@@ -134,7 +134,7 @@ class _SetupFormState extends State<SetupForm> {
             new ValueInput('Sweep Segments', (double d) => {voltammetrySettings.sweepSegments = d}, ''),
             new ValueInput('Sample Interval (V)', (double d) => {voltammetrySettings.sampleInterval = d}, ''),
             new DropDownInput(
-                labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+                labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
                 values: GainSettings.values.toList(),
                 hint: 'Select Gain Setting',
                 callback: (GainSettings g) => {voltammetrySettings.gainSetting = g}),
@@ -155,7 +155,7 @@ class _SetupFormState extends State<SetupForm> {
             new ValueInput('Sample Interval (V)', (double d) => {amperometrySettings.sampleInterval = d}, ''),
             new ValueInput('Run time (S)', (double d) => {amperometrySettings.runtime = d}, ''),
             new DropDownInput(
-                labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+                labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
                 values: GainSettings.values.toList(),
                 hint: 'Select Gain Setting',
                 callback: (GainSettings g) => {amperometrySettings.gainSetting = g}),
@@ -283,7 +283,9 @@ class _SetupFormState extends State<SetupForm> {
                     Expanded(flex: 5, child: RaisedButton(onPressed: _saveNewFile, child: Text('Save as New Config')))
                   ])
               ]),
-            )));
+            )
+          )
+        );
   }
 }
 
