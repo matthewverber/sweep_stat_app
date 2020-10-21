@@ -12,7 +12,6 @@ class Experiment {
 
   Experiment(this.settings);
 
-  // TODO What is this being used for?
   Future<Directory> getOrCreateCurrentDirectory() async {
     if (experimentDir == null) {
       Directory appDocDir = await getApplicationDocumentsDirectory();
@@ -78,7 +77,7 @@ class Experiment {
       experimentDir = await experimentDir.create();
     }
 
-    File experimentFile = new File(experimentDir.path + fileName + '.csv');
+    File experimentFile = new File(experimentDir.path + fileName + '.txt');
     if (await experimentFile.exists()) return false;
 
     await experimentFile.writeAsString(this.toString());

@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:share/share.dart';
 import 'package:sweep_stat_app/experiment.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'experiment_settings.dart';
 
@@ -13,9 +15,8 @@ class FileNamePopup extends StatefulWidget {
   // TODO: Might not be needed since we are getting a project name and can have a generic _config _experimentube
 
   final Function onSave;
-  final Function onConfirm;
 
-  FileNamePopup({Key key, this.onSave, this.onConfirm}) : super(key: key);
+  FileNamePopup({Key key, this.onSave}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -37,11 +38,12 @@ class _FileNamePopupState extends State<FileNamePopup> {
       if (saveStatus) {
         return AlertDialog(
           content: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text("Save Complete!"),
               RaisedButton(
                   onPressed: () {
-                    Navigator.pop(widget.onConfirm());
+                    Navigator.pop(context);
                   },
                   child: Text("Ok!"))
             ],
@@ -50,11 +52,12 @@ class _FileNamePopupState extends State<FileNamePopup> {
       } else {
         return AlertDialog(
             content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text("There was a problem saving!"),
+                Text("Filename already exists!"),
                 RaisedButton(
                     onPressed: () {
-                      Navigator.pop(widget.onConfirm());
+                      Navigator.pop(context);
                     },
                     child: Text("Ok!"))
               ],
@@ -65,6 +68,7 @@ class _FileNamePopupState extends State<FileNamePopup> {
         content: Form(
           key: _formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
                   controller: _textController,
@@ -91,13 +95,31 @@ class _FileNamePopupState extends State<FileNamePopup> {
                       saving = true;
                     });
                   }),
-              RaisedButton(
-                  onPressed: () {
-                    if (_formKey.currentState.validate()) {
-                      _formKey.currentState.save();
-                    }
-                  },
-                  child: Text("Save"))
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        flex: 5, 
+                        child:RaisedButton(
+                            onPressed: () {
+                              if (_formKey.currentState.validate()) {
+                                _formKey.currentState.save();
+                              }
+                            },
+                            child: Text("Save")
+                          )
+                        ),
+                      Spacer(flex:1),
+                      Expanded(
+                        flex: 5,
+                        child: RaisedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text("Cancel")
+                        )
+                      )
+                  ]),
             ],
           ),
         ),
@@ -128,7 +150,7 @@ class ExperimentSettingsValues extends StatelessWidget {
     List<Widget> settingsValues; 
     if (settings is VoltammetrySettings){
       settingsValues = [
-        //Expanded(child:settingsText('Cyclic Voltammetry')),
+        Row(children:[Expanded(child:settingsText('Cyclic Voltammetry'))]),
         settingsRow("Initial Voltage", settings.initialVoltage, "V"),
         settingsRow("Vertex Voltage", (settings as VoltammetrySettings).vertexVoltage, "V"),  // settings.highVoltage, "V"),
         settingsRow("Final Voltage", (settings as VoltammetrySettings).finalVoltage, "V"),  // settings.highVoltage, "V"),
@@ -140,7 +162,7 @@ class ExperimentSettingsValues extends StatelessWidget {
       ];
     } else {
       settingsValues = [
-        //Expanded(child:settingsText('Amperometry')),
+        Row(children: [Expanded(child:settingsText('Amperometry'))]),
         settingsRow("Initial Voltage", settings.initialVoltage, "V"),
         settingsRow("Sample Interval", settings.sampleInterval, "V"),
         settingsRow("Runtime", (settings as AmperometrySettings).runtime, "S"),
@@ -185,10 +207,25 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   LineChartBarData data_R;
   double i, j; // TODO temp: remove later
   Timer callbackTimer;
-  bool isSaving = false;
 
   Future<bool> saveLocally(String fileName) async {
     return await widget.experiment.saveExperiment(fileName);
+  }
+
+  Future<bool> shareFiles() async {
+    String fileName;
+    await showDialog(context: context, builder: (BuildContext context)=>FileNamePopup(onSave: (String name){fileName = name; return Future<bool>.value(true);}));
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    Directory experimentDir = Directory(appDocDir.path+'/temp/');
+    if (!await experimentDir.exists()){
+      experimentDir = await experimentDir.create();
+    }
+    File experimentFile = new File(experimentDir.path + fileName + '.txt');
+    await experimentFile.writeAsString(widget.experiment.toString());
+    print('${experimentDir.path}$fileName.txt');
+    await Share.shareFiles([
+        '${experimentDir.path}$fileName.txt']);
+    await experimentFile.delete();
   }
 
 
@@ -205,7 +242,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   void dispose() {
     super.dispose();
-    callbackTimer.cancel();
+    if (callbackTimer != null){
+      callbackTimer.cancel();
+    }
   }
 
   bool locki = false;
@@ -247,11 +286,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           child: Padding(
             padding: EdgeInsets.only(top: 10, left: 5),
             child: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if (this.mounted && isSaving) FileNamePopup(onSave: saveLocally, onConfirm: (){
-                setState(() {
-                  isSaving = false;
-                });
-              },),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
@@ -278,9 +312,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
-                      setState(() {
-                        isSaving = true;
-                      });
+                      await showDialog(
+                        context: context, 
+                        builder: (BuildContext context)=>FileNamePopup(onSave: saveLocally));
                     },
                     child: Text(
                       "Save",
@@ -289,24 +323,52 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     color: Colors.blue,
                     child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
-                    onPressed: () {
-                      callbackTimer = Timer.periodic(new Duration(milliseconds: 20), (timer) {
-                        setState(() {
-                          if (i > 5) {
-                            return;
-                          }
-                          widget.experiment.dataL.add(new FlSpot(i + 0.0, i * i));
-                          widget.experiment.dataR.add(new FlSpot(j, cos(-j * j)));
-                          i += .3;
-                          j += .3;
-                        });
+                    onPressed: () async {
+                      
+                      if (widget.experiment.dataL.length > 1 && widget.experiment.dataR.length >1 && !await showDialog(
+                        context: context,
+                        builder: (BuildContext context)=>AlertDialog(
+                          title: Text('Warning'),
+                          content: Text('Are you sure you want to start the experiment? This will delete existing experiment data'),
+                          actions: <Widget>[
+                            MaterialButton(
+                                child: Text('Confirm'),
+                                onPressed: (){Navigator.of(context).pop(true);}),
+                            
+                            MaterialButton(
+                                child: Text('Cancel'),
+                                onPressed: (){Navigator.of(context).pop(false);})
+                          ]
+                        )
+                      )) return;
+                      
+                      setState((){
+                        widget.experiment.dataL = [FlSpot(0.0, 0.0)];
+                        widget.experiment.dataR = [FlSpot(0.0, 0.0)];
+                        data_L = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
+                        data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
+                        i = 0.0;
+                        j = 0.0;
                       });
-                      print(widget.experiment.toString());
+                      callbackTimer = Timer.periodic(new Duration(milliseconds: 20), (timer) {
+                        if (mounted){
+                          setState(() {
+                            if (i > 5) {
+                              callbackTimer.cancel();
+                              return;
+                            }
+                            widget.experiment.dataL.add(new FlSpot(i + 0.0, i * i));
+                            widget.experiment.dataR.add(new FlSpot(j, cos(-j * j)));
+                            i += .3;
+                            j += .3;
+                          });
+                        }
+                      });
                     }),
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
-                      await Share.share(widget.experiment.toString());
+                      await shareFiles();
                     },
                     child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15)))
               ]),
