@@ -255,12 +255,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     flutterBlue.stopScan();
     print('done');
     List devices = await flutterBlue.connectedDevices;
-    print('devices:');
-    print(devices);
-    if (device == null && devices.length >= 1) device = devices[0];
-    if (device == null) return;
+
+    if (device == null && devices.length >= 1) {
+      device = devices[0];
+    } else {
+      if (device == null) return;
+      await device.connect();
+    }
     print('les');
-    await device.connect();
     print('Connected!');
     List<BluetoothService> services = await device.discoverServices();
     BluetoothCharacteristic char;
@@ -272,19 +274,28 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             print("Char uuid: " + c.uuid.toString());
             if (c.uuid == Guid("0000FFE1-0000-1000-8000-00805F9B34FB")){
               char = c;
+              print("Notify: " + c.properties.notify.toString());
+              print("Read: " + c.properties.read.toString());
+              print("Write: " + c.properties.write.toString());
               break;
             }
-            print(c.properties.toString());
           }
       }
 
     }
+    await char.setNotifyValue(true);
+    char.value.listen((value) {
+        // do something with new value
+        if (value.length == 1 && value[0] == 36){
+          device.disconnect();
+        }
+        print(value);
+    });
     if(char != null) {
-      await char.write(["R".codeUnitAt(0)]);
+      await char.write([".".codeUnitAt(0)]);
     }
 
 
-    device.disconnect();
 
     return;
   }
