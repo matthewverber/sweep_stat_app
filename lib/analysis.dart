@@ -8,6 +8,7 @@ import 'package:share/share.dart';
 import 'package:sweep_stat_app/experiment.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 
 import 'experiment_settings.dart';
 
@@ -208,6 +209,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   double i, j; // TODO temp: remove later
   Timer callbackTimer;
 
+
+
   Future<bool> saveLocally(String fileName) async {
     return await widget.experiment.saveExperiment(fileName);
   }
@@ -226,6 +229,64 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     await Share.shareFiles([
         '${experimentDir.path}$fileName.txt']);
     await experimentFile.delete();
+  }
+
+  Future<void> bluetooth() async {
+    print('starting scan');
+    FlutterBlue flutterBlue = FlutterBlue.instance;
+    BluetoothDevice device;
+    // Start scanning
+    flutterBlue.startScan(timeout: Duration(seconds: 10));
+
+
+    await for (List<ScanResult> results in flutterBlue.scanResults){
+      print(results);
+      for (ScanResult r in results) {
+        print(r.device.name);
+            if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")){
+              print("FOUND");
+              device = r.device;
+              flutterBlue.stopScan();
+              print('stopping scan');
+            }
+      }
+      break;
+    }
+    flutterBlue.stopScan();
+    print('done');
+    List devices = await flutterBlue.connectedDevices;
+    print('devices:');
+    print(devices);
+    if (device == null && devices.length >= 1) device = devices[0];
+    if (device == null) return;
+    print('les');
+    await device.connect();
+    print('Connected!');
+    List<BluetoothService> services = await device.discoverServices();
+    BluetoothCharacteristic char;
+
+    for (BluetoothService service in services){
+      print("Service uuid: " + service.uuid.toString());
+      if (service.uuid == Guid("0000FFE0-0000-1000-8000-00805F9B34FB")){
+          for(BluetoothCharacteristic c in service.characteristics) {
+            print("Char uuid: " + c.uuid.toString());
+            if (c.uuid == Guid("0000FFE1-0000-1000-8000-00805F9B34FB")){
+              char = c;
+              break;
+            }
+            print(c.properties.toString());
+          }
+      }
+
+    }
+    if(char != null) {
+      await char.write(["R".codeUnitAt(0)]);
+    }
+
+
+    device.disconnect();
+
+    return;
   }
 
 
@@ -370,7 +431,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     onPressed: () async {
                       await shareFiles();
                     },
-                    child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15)))
+                    child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15))),
+                RaisedButton(
+                    color: Colors.blue,
+                    onPressed: bluetooth,
+                    child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15)))
               ]),
             ]),
           ),
