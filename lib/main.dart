@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sweep_stat_app/bluetooth_mangement.dart';
 import 'guided_setup.dart';
 import 'advanced_setup.dart';
 import 'load_configuration.dart';
@@ -151,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         RecentResults()), // TODO: Needs recent results widget route
                     _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
                     _buildSecondaryButton("BLUETOOTH CONNECTION",
-                        null), // TODO: Needs bluetooth widget route],))
+                        BlueToothSelection()),
                   ],
                 ),
               ),
