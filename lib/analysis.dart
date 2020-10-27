@@ -294,20 +294,20 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       print('hola');
       if (device == null && devices.length >= 1) {
         device = devices[0];
+        print('added existing device');
       } else {
         if (device == null) return;
         await device.connect();
       }
       print('here');
 
-      Utf8Decoder dec = Utf8Decoder();
       sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
-      sweepStatBTConnection.addNotifyListener(plotBTPoint);
+      await sweepStatBTConnection.addNotifyListener(plotBTPoint);
       print('ready to send');
 
     }
 
-    sweepStatBTConnection.writeToSweepStat('.');
+    await sweepStatBTConnection.writeToSweepStat('.');
 
 
 
@@ -375,7 +375,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
                   child: LineChart(LineChartData(
-                      maxX: 5,
+                      maxX: 1,
                       // widget.experiment.settings.vertexVoltage,
                       minX: 0,
                       // widget.experiment.settings.lowVoltage,
