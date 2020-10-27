@@ -36,7 +36,8 @@ class SetupForm extends StatefulWidget {
 
 class _SetupFormState extends State<SetupForm> {
   final _formKey = GlobalKey<FormState>(); // formkey for form
-  ExperimentSettings experimentSettings; // ExperimentSettings class to save data
+  ExperimentSettings
+      experimentSettings; // ExperimentSettings class to save data
   // List of inputs for each field necessary
   List inputs;
   File file;
@@ -47,7 +48,8 @@ class _SetupFormState extends State<SetupForm> {
     super.initState();
     file = widget.file;
     if (file != null) {
-      String directoryPath = file.path.substring(0, file.path.lastIndexOf('/') + 1);
+      String directoryPath =
+          file.path.substring(0, file.path.lastIndexOf('/') + 1);
       String fileName = file.path.split('/').last.split('.').first;
       TextFormField nameWidget = TextFormField(
           decoration: InputDecoration(labelText: 'File Name'),
@@ -70,20 +72,44 @@ class _SetupFormState extends State<SetupForm> {
 
         inputs = [
           nameWidget,
-          new ValueInput('Initial Voltage (V)', (double d) => {voltammetrySettings.initialVoltage = d}, voltammetrySettings.initialVoltage.toString()),
-          new ValueInput('Vertex Voltage (V)', (double d) => {voltammetrySettings.vertexVoltage = d}, voltammetrySettings.vertexVoltage.toString()),
-          new ValueInput('Final Voltage (V)', (double d) => {voltammetrySettings.finalVoltage = d}, voltammetrySettings.finalVoltage.toString()),
-          new ValueInput('Scan Rate (V/s)', (double d) => {voltammetrySettings.scanRate = d}, voltammetrySettings.scanRate.toString()),
-          new ValueInput('Sweep Segments', (double d) => {voltammetrySettings.sweepSegments = d}, voltammetrySettings.sweepSegments.toString()),
-          new ValueInput('Sample Interval (V)', (double d) => {voltammetrySettings.sampleInterval = d}, voltammetrySettings.sampleInterval.toString()),
+          new ValueInput(
+              'Initial Voltage (V)',
+              (double d) => {voltammetrySettings.initialVoltage = d},
+              voltammetrySettings.initialVoltage.toString()),
+          new ValueInput(
+              'Vertex Voltage (V)',
+              (double d) => {voltammetrySettings.vertexVoltage = d},
+              voltammetrySettings.vertexVoltage.toString()),
+          new ValueInput(
+              'Final Voltage (V)',
+              (double d) => {voltammetrySettings.finalVoltage = d},
+              voltammetrySettings.finalVoltage.toString()),
+          new ValueInput(
+              'Scan Rate (V/s)',
+              (double d) => {voltammetrySettings.scanRate = d},
+              voltammetrySettings.scanRate.toString()),
+          new ValueInput(
+              'Sweep Segments',
+              (double d) => {voltammetrySettings.sweepSegments = d},
+              voltammetrySettings.sweepSegments.toString()),
+          new ValueInput(
+              'Sample Interval (V)',
+              (double d) => {voltammetrySettings.sampleInterval = d},
+              voltammetrySettings.sampleInterval.toString()),
           new DropDownInput(
-              labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+              labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
               values: GainSettings.values.toList(),
               hint: 'Select Gain Setting',
               initialVal: voltammetrySettings.gainSetting,
-              callback: (GainSettings g) => {voltammetrySettings.gainSetting = g}),
+              callback: (GainSettings g) =>
+                  {voltammetrySettings.gainSetting = g}),
           new DropDownInput(
-              labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'],
+              labelStrings: [
+                'Pseudo-Reference Electrode',
+                'Silver/Silver Chloride Electrode',
+                'Saturated Calomel',
+                'Standard Hydrogen Electrode'
+              ],
               values: Electrode.values.toList(),
               hint: 'Select Electrode',
               initialVal: voltammetrySettings.electrode,
@@ -96,17 +122,32 @@ class _SetupFormState extends State<SetupForm> {
         amperometrySettings.loadFromFile(file);
         inputs = [
           nameWidget,
-          new ValueInput('Initial Voltage (V)', (double d) => {amperometrySettings.initialVoltage = d}, amperometrySettings.initialVoltage.toString()),
-          new ValueInput('Sample Interval (V)', (double d) => {amperometrySettings.sampleInterval = d}, amperometrySettings.sampleInterval.toString()),
-          new ValueInput('Run time (S)', (double d) => {amperometrySettings.runtime = d}, amperometrySettings.runtime.toString()),
+          new ValueInput(
+              'Initial Voltage (V)',
+              (double d) => {amperometrySettings.initialVoltage = d},
+              amperometrySettings.initialVoltage.toString()),
+          new ValueInput(
+              'Sample Interval (V)',
+              (double d) => {amperometrySettings.sampleInterval = d},
+              amperometrySettings.sampleInterval.toString()),
+          new ValueInput(
+              'Run time (S)',
+              (double d) => {amperometrySettings.runtime = d},
+              amperometrySettings.runtime.toString()),
           new DropDownInput(
-              labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+              labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
               values: GainSettings.values.toList(),
               hint: 'Select Gain Setting',
               initialVal: amperometrySettings.gainSetting,
-              callback: (GainSettings g) => {amperometrySettings.gainSetting = g}),
+              callback: (GainSettings g) =>
+                  {amperometrySettings.gainSetting = g}),
           new DropDownInput(
-              labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'],
+              labelStrings: [
+                'Pseudo-Reference Electrode',
+                'Silver/Silver Chloride Electrode',
+                'Saturated Calomel',
+                'Standard Hydrogen Electrode'
+              ],
               values: Electrode.values.toList(),
               hint: 'Select Electrode',
               initialVal: amperometrySettings.electrode,
@@ -127,19 +168,31 @@ class _SetupFormState extends State<SetupForm> {
           expType = 'CV';
           VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
           inputs = [
-            new ValueInput('Initial Voltage (V)', (double d) => {voltammetrySettings.initialVoltage = d}, ''),
-            new ValueInput('Vertex Voltage (V)', (double d) => {voltammetrySettings.vertexVoltage = d}, ''),
-            new ValueInput('Final Voltage (V)', (double d) => {voltammetrySettings.finalVoltage = d}, ''),
-            new ValueInput('Scan Rate (V/s)', (double d) => {voltammetrySettings.scanRate = d}, ''),
-            new ValueInput('Sweep Segments', (double d) => {voltammetrySettings.sweepSegments = d}, ''),
-            new ValueInput('Sample Interval (V)', (double d) => {voltammetrySettings.sampleInterval = d}, ''),
+            new ValueInput('Initial Voltage (V)',
+                (double d) => {voltammetrySettings.initialVoltage = d}, ''),
+            new ValueInput('Vertex Voltage (V)',
+                (double d) => {voltammetrySettings.vertexVoltage = d}, ''),
+            new ValueInput('Final Voltage (V)',
+                (double d) => {voltammetrySettings.finalVoltage = d}, ''),
+            new ValueInput('Scan Rate (V/s)',
+                (double d) => {voltammetrySettings.scanRate = d}, ''),
+            new ValueInput('Sweep Segments',
+                (double d) => {voltammetrySettings.sweepSegments = d}, ''),
+            new ValueInput('Sample Interval (V)',
+                (double d) => {voltammetrySettings.sampleInterval = d}, ''),
             new DropDownInput(
-                labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+                labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
                 values: GainSettings.values.toList(),
                 hint: 'Select Gain Setting',
-                callback: (GainSettings g) => {voltammetrySettings.gainSetting = g}),
+                callback: (GainSettings g) =>
+                    {voltammetrySettings.gainSetting = g}),
             new DropDownInput(
-                labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'],
+                labelStrings: [
+                  'Pseudo-Reference Electrode',
+                  'Silver/Silver Chloride Electrode',
+                  'Saturated Calomel',
+                  'Standard Hydrogen Electrode'
+                ],
                 values: Electrode.values.toList(),
                 hint: 'Select Electrode',
                 callback: (Electrode e) => {voltammetrySettings.electrode = e})
@@ -151,16 +204,25 @@ class _SetupFormState extends State<SetupForm> {
           expType = 'Amperometry';
           AmperometrySettings amperometrySettings = new AmperometrySettings();
           inputs = [
-            new ValueInput('Initial Voltage (V)', (double d) => {amperometrySettings.initialVoltage = d}, ''),
-            new ValueInput('Sample Interval (V)', (double d) => {amperometrySettings.sampleInterval = d}, ''),
-            new ValueInput('Run time (S)', (double d) => {amperometrySettings.runtime = d}, ''),
+            new ValueInput('Initial Voltage (V)',
+                (double d) => {amperometrySettings.initialVoltage = d}, ''),
+            new ValueInput('Sample Interval (V)',
+                (double d) => {amperometrySettings.sampleInterval = d}, ''),
+            new ValueInput('Run time (S)',
+                (double d) => {amperometrySettings.runtime = d}, ''),
             new DropDownInput(
-                labelStrings: ['Macroelectrode (r > 25 µm)', 'Microelectrode (r < 25 µm)'],
+                labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
                 values: GainSettings.values.toList(),
                 hint: 'Select Gain Setting',
-                callback: (GainSettings g) => {amperometrySettings.gainSetting = g}),
+                callback: (GainSettings g) =>
+                    {amperometrySettings.gainSetting = g}),
             new DropDownInput(
-                labelStrings: ['Pseudo-Reference Electrode', 'Silver/Silver Chloride Electrode', 'Saturated Calomel', 'Standard Hydrogen Electrode'],
+                labelStrings: [
+                  'Pseudo-Reference Electrode',
+                  'Silver/Silver Chloride Electrode',
+                  'Saturated Calomel',
+                  'Standard Hydrogen Electrode'
+                ],
                 values: Electrode.values.toList(),
                 hint: 'Select Electrode',
                 callback: (Electrode e) => {amperometrySettings.electrode = e})
@@ -191,11 +253,14 @@ class _SetupFormState extends State<SetupForm> {
     // Make sure name is valid
     if (name != null) {
       // Write to file and alert user using experimentSettings' writeToFile
-      if (await experimentSettings.writeToFile(name, expType == 'CV' ? 'cv_configs' : 'amp_configs')) {
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' saved!')));
+      if (await experimentSettings.writeToFile(
+          name, expType == 'CV' ? 'cv_configs' : 'amp_configs')) {
+        Scaffold.of(context)
+            .showSnackBar(SnackBar(content: Text(name + ' saved!')));
       } else {
         // If false returned, file already exists
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text(name + ' already exists')));
+        Scaffold.of(context)
+            .showSnackBar(SnackBar(content: Text(name + ' already exists')));
       }
     }
   }
@@ -234,56 +299,75 @@ class _SetupFormState extends State<SetupForm> {
         key: _formKey,
         child: Center(
             child: FractionallySizedBox(
-              widthFactor: 0.9,
-              child: ListView(children: <Widget>[
-                if (file == null)
-                  new DropdownButton(
-                      value: expType,
-                      onChanged: (String val) => changeExperimentType(val),
-                      items: [DropdownMenuItem(value: 'CV', child: Text('CV')), DropdownMenuItem(value: 'Amperometry', child: Text('Amperometry'))]),
-                ...inputs,
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Expanded(
-                      flex: 5,
-                      child: RaisedButton(
-                          onPressed: () {
-                            if (_loadVariables()) {
-                              Experiment currentExperiment = new Experiment(experimentSettings);
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (BuildContext context) => AnalysisScreen(
-                                    experiment: currentExperiment,
-                                  )));
-                            }
-                          },
-                          child: Text('Run Test'))),
-                  Spacer(flex: 1),
-                  Expanded(
-                      flex: 5,
-                      child: RaisedButton(
-                          onPressed: () async {
-                            // if inputs valid
-                            if (_loadVariables()) {
-                              if (file == null) {
-                                _saveNewFile();
+          widthFactor: 0.9,
+          child: ListView(children: <Widget>[
+            if (file == null)
+              new DropdownButton(
+                  value: expType,
+                  onChanged: (String val) => changeExperimentType(val),
+                  items: [
+                    DropdownMenuItem(value: 'CV', child: Text('CV')),
+                    DropdownMenuItem(
+                        value: 'Amperometry', child: Text('Amperometry'))
+                  ]),
+            ...inputs,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+              children: [
+                Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                        onPressed: () {
+                          if (_loadVariables()) {
+                            Experiment currentExperiment =
+                                new Experiment(experimentSettings);
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (BuildContext context) => AnalysisScreen(
+                                      experiment: currentExperiment,
+                                    )));
+                          }
+                        },
+                        child: Text('Run Test')
+                    )
+                  ),
+                Spacer(flex: 1),
+                Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                        onPressed: () async {
+                          // if inputs valid
+                          if (_loadVariables()) {
+                            if (file == null) {
+                              _saveNewFile();
+                            } else {
+                              if (await experimentSettings.overwriteFile(file)) {
+                                Scaffold.of(context).showSnackBar(
+                                    SnackBar(content: Text('File Updated')));
                               } else {
-                                if (await experimentSettings.overwriteFile(file)) {
-                                  Scaffold.of(context).showSnackBar(SnackBar(content: Text('File Updated')));
-                                } else {
-                                  Scaffold.of(context).showSnackBar(SnackBar(content: Text('Error updating file')));
-                                }
+                                Scaffold.of(context).showSnackBar(SnackBar(
+                                    content: Text('Error updating file')));
                               }
                             }
-                          },
-                          child: Text('Save')))
-                ]),
-                if (file != null)
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Expanded(flex: 5, child: RaisedButton(onPressed: () => Share.shareFiles([file.path]), child: Text('Export'))),
-                    Spacer(flex: 1),
-                    Expanded(flex: 5, child: RaisedButton(onPressed: _saveNewFile, child: Text('Save as New Config')))
-                  ])
-              ]),
-            )));
+                          }
+                        },
+                        child: Text('Save')))
+            ]),
+            if (file != null)
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                        onPressed: () => Share.shareFiles([file.path]),
+                        child: Text('Export'))),
+                Spacer(flex: 1),
+                Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                        onPressed: _saveNewFile,
+                        child: Text('Save as New Config')))
+              ])
+          ]),
+        )));
   }
 }
 
@@ -294,7 +378,8 @@ class _SetupFormState extends State<SetupForm> {
 class ValueInput extends StatelessWidget {
   ValueInput(this.text, this.callback, this.value);
 
-  final String text, value; // Text is displayed name, units is the displayed unit val at end
+  final String text,
+      value; // Text is displayed name, units is the displayed unit val at end
   final Function callback; // Callback called on save
 
   @override
@@ -328,7 +413,14 @@ class DropDownInput extends StatefulWidget {
   final initialVal;
   final Function callback;
 
-  const DropDownInput({Key key, this.labelStrings, this.values, this.hint = '', this.initialVal, this.callback}) : super(key: key);
+  const DropDownInput(
+      {Key key,
+      this.labelStrings,
+      this.values,
+      this.hint = '',
+      this.initialVal,
+      this.callback})
+      : super(key: key);
 
   @override
   _DropDownInputState createState() => _DropDownInputState();
@@ -353,7 +445,10 @@ class _DropDownInputState extends State<DropDownInput> {
           selectedInput = value;
         });
       },
-      items: List.generate(widget.labelStrings.length, (i) => DropdownMenuItem(value: widget.values[i], child: Text(widget.labelStrings[i]))),
+      items: List.generate(
+          widget.labelStrings.length,
+          (i) => DropdownMenuItem(
+              value: widget.values[i], child: Text(widget.labelStrings[i]))),
       validator: (val) => val == null ? 'Please select a value' : null,
       onSaved: (val) {
         widget.callback(val);

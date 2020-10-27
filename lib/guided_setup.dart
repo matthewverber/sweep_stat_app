@@ -44,7 +44,7 @@ class _GuidedSetupState extends State<GuidedSetup> {
   int _currentPage = 0;
   //String selected =
   //">25"; // Temporary variable for holding selected value of page 3 until we implement the Voltammetry Settings
-  GainSettings _selectedGain = GainSettings.macro;
+  GainSettings _selectedGain = GainSettings.nA10;
   Electrode _selectedElectrode = Electrode.pseudoref;
   VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
   double _initialPot = 0.0;
