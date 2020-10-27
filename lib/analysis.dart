@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
 import 'experiment_settings.dart';
+import 'bluetooth_connection.dart';
 
 class FileNamePopup extends StatefulWidget {
   // TODO: Might not be needed since we are getting a project name and can have a generic _config _experimentube
@@ -203,6 +205,7 @@ class AnalysisScreen extends StatefulWidget {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  SweepStatBTConnection sweepStatBTConnection;
 
   LineChartBarData data_L;
   LineChartBarData data_R;
@@ -225,79 +228,68 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
     File experimentFile = new File(experimentDir.path + fileName + '.txt');
     await experimentFile.writeAsString(widget.experiment.toString());
-    print('${experimentDir.path}$fileName.txt');
     await Share.shareFiles([
         '${experimentDir.path}$fileName.txt']);
     await experimentFile.delete();
+    return true;
   }
+/*
+  void onBTDisconnect(){
+    sweepStatBTConnection = null;
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text('Bluetooth Disconnected')));
+  
+  }*/
 
   Future<void> bluetooth() async {
-    print('starting scan');
-    FlutterBlue flutterBlue = FlutterBlue.instance;
-    BluetoothDevice device;
-    // Start scanning
-    flutterBlue.startScan(timeout: Duration(seconds: 10));
+    if (sweepStatBTConnection == null){
+      FlutterBlue flutterBlue = FlutterBlue.instance;
+      BluetoothDevice device;
+      // Start scanning
+      flutterBlue.startScan(timeout: Duration(seconds: 10));
 
-
-    await for (List<ScanResult> results in flutterBlue.scanResults){
-      print(results);
-      for (ScanResult r in results) {
-        print(r.device.name);
+      int i = 0;
+      await for (List<ScanResult> results in flutterBlue.scanResults){
+        print('scanning');
+        print(results);
+        for (ScanResult r in results) {
+          print(r.device.id);
             if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")){
               print("FOUND");
               device = r.device;
               flutterBlue.stopScan();
               print('stopping scan');
-            }
-      }
-      break;
-    }
-    flutterBlue.stopScan();
-    print('done');
-    List devices = await flutterBlue.connectedDevices;
-
-    if (device == null && devices.length >= 1) {
-      device = devices[0];
-    } else {
-      if (device == null) return;
-      await device.connect();
-    }
-    print('les');
-    print('Connected!');
-    List<BluetoothService> services = await device.discoverServices();
-    BluetoothCharacteristic char;
-
-    for (BluetoothService service in services){
-      print("Service uuid: " + service.uuid.toString());
-      if (service.uuid == Guid("0000FFE0-0000-1000-8000-00805F9B34FB")){
-          for(BluetoothCharacteristic c in service.characteristics) {
-            print("Char uuid: " + c.uuid.toString());
-            if (c.uuid == Guid("0000FFE1-0000-1000-8000-00805F9B34FB")){
-              char = c;
-              print("Notify: " + c.properties.notify.toString());
-              print("Read: " + c.properties.read.toString());
-              print("Write: " + c.properties.write.toString());
               break;
             }
-          }
-      }
-
-    }
-    await char.setNotifyValue(true);
-    char.value.listen((value) {
-        // do something with new value
-        if (value.length == 1 && value[0] == 36){
-          device.disconnect();
         }
-        print(value);
-    });
-    if(char != null) {
-      await char.write([".".codeUnitAt(0)]);
+        i++;
+        if (i > 10) break;
+      }
+      flutterBlue.stopScan();
+      List devices = await flutterBlue.connectedDevices;
+      print(devices);
+      print(device);
+      print('hola');
+      if (device == null && devices.length >= 1) {
+        device = devices[0];
+      } else {
+        if (device == null) return;
+        await device.connect();
+      }
+      print('here');
+
+      Utf8Decoder dec = Utf8Decoder();
+      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
+      sweepStatBTConnection.addNotifyListener((List<int> ints){
+        print(dec.convert(ints));
+      });
+      print('ready to send');
+
     }
 
+    sweepStatBTConnection.writeToSweepStat('.');
 
 
-    return;
+
   }
 
 
@@ -443,13 +435,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       await shareFiles();
                     },
                     child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15))),
-                RaisedButton(
+                Builder(builder: (context)=>RaisedButton(
                     color: Colors.blue,
                     onPressed: bluetooth,
-                    child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15)))
+                    child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
+                
               ]),
             ]),
           ),
         ));
   }
 }
+
