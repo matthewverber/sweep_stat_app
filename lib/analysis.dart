@@ -206,6 +206,8 @@ class AnalysisScreen extends StatefulWidget {
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   SweepStatBTConnection sweepStatBTConnection;
+  Utf8Decoder dec = Utf8Decoder();
+  String incString = "";
 
   LineChartBarData data_L;
   LineChartBarData data_R;
@@ -240,6 +242,26 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   
   }*/
 
+  void plotBTPoint(List<int> intMessage){
+    if (dec.convert(intMessage) == "\$") return;
+    String message = dec.convert(intMessage);
+    if (!message.endsWith('}')){
+      incString = message;
+      return;
+    }
+    message = incString + message;
+    incString = "";
+    List<String> parts = message.split(',');
+    double volt = double.parse(parts[1].substring(2));
+    double charge = double.parse(parts[2].substring(2, parts[2].length-1));
+    if (mounted){
+      setState((){
+        widget.experiment.dataL.add(new FlSpot(volt, charge));
+      });
+    }
+  }
+
+
   Future<void> bluetooth() async {
     if (sweepStatBTConnection == null){
       FlutterBlue flutterBlue = FlutterBlue.instance;
@@ -265,6 +287,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         if (i > 10) break;
       }
       flutterBlue.stopScan();
+      print('scan stopped');
       List devices = await flutterBlue.connectedDevices;
       print(devices);
       print(device);
@@ -279,9 +302,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
       Utf8Decoder dec = Utf8Decoder();
       sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
-      sweepStatBTConnection.addNotifyListener((List<int> ints){
-        print(dec.convert(ints));
-      });
+      sweepStatBTConnection.addNotifyListener(plotBTPoint);
       print('ready to send');
 
     }
