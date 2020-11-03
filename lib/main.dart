@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 import 'package:sweep_stat_app/bluetooth_mangement.dart';
 import 'guided_setup.dart';
 import 'advanced_setup.dart';
@@ -55,6 +56,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  BluetoothDevice _bluetoothDevice;
+
   Widget _buildPrimaryButton(String buttonText, Widget route) {
     return Container(
         margin: EdgeInsets.all(10),
@@ -69,15 +72,11 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.all(5.0),
               splashColor: Colors.blueAccent,
               onPressed: () {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => route));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => route));
               },
               child: Text(
                 buttonText,
-                style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w500),
+                style: TextStyle(fontFamily: 'Roboto', fontSize: 12.0, fontWeight: FontWeight.w500),
               ),
             )));
   }
@@ -148,11 +147,23 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildSecondaryButton("RECENT RESULTS",
-                        RecentResults()), // TODO: Needs recent results widget route
+                    _buildSecondaryButton("RECENT RESULTS", RecentResults()), // TODO: Needs recent results widget route
                     _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
-                    _buildSecondaryButton("BLUETOOTH CONNECTION",
-                        BlueToothSelection()),
+                    // _buildSecondaryButton("BLUETOOTH CONNECTION",
+                    //     BlueToothSelection()),
+                    RaisedButton(
+                      child: Text("BLUETOOTH CONNECTION"),
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BlueToothSelection();
+                            }).then((device) {
+                          _bluetoothDevice = device as BluetoothDevice;
+                          print(_bluetoothDevice);
+                        });
+                      },
+                    )
                   ],
                 ),
               ),
@@ -163,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ])
-        /* Center(
+      /* Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
@@ -261,11 +272,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ), */
-        /*floatingActionButton: FloatingActionButton(
+      /*floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ),*/ // This trailing comma makes auto-formatting nicer for build methods.
-        );
+    );
   }
 }
