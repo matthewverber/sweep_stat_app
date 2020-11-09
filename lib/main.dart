@@ -149,21 +149,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     _buildSecondaryButton("RECENT RESULTS", RecentResults()), // TODO: Needs recent results widget route
                     _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
-                    // _buildSecondaryButton("BLUETOOTH CONNECTION",
-                    //     BlueToothSelection()),
-                    RaisedButton(
-                      child: Text("BLUETOOTH CONNECTION"),
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return BlueToothSelection();
-                            }).then((device) {
-                          _bluetoothDevice = device as BluetoothDevice;
-                          print(_bluetoothDevice);
-                        });
-                      },
-                    )
                   ],
                 ),
               ),

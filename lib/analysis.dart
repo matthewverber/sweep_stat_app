@@ -11,6 +11,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
+import 'bluetooth_mangement.dart';
 import 'experiment_settings.dart';
 import 'bluetooth_connection.dart';
 
@@ -98,31 +99,25 @@ class _FileNamePopupState extends State<FileNamePopup> {
                       saving = true;
                     });
                   }),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        flex: 5, 
-                        child:RaisedButton(
-                            onPressed: () {
-                              if (_formKey.currentState.validate()) {
-                                _formKey.currentState.save();
-                              }
-                            },
-                            child: Text("Save")
-                          )
-                        ),
-                      Spacer(flex:1),
-                      Expanded(
-                        flex: 5,
-                        child: RaisedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text("Cancel")
-                        )
-                      )
-                  ]),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                        onPressed: () {
+                          if (_formKey.currentState.validate()) {
+                            _formKey.currentState.save();
+                          }
+                        },
+                        child: Text("Save"))),
+                Spacer(flex: 1),
+                Expanded(
+                    flex: 5,
+                    child: RaisedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text("Cancel")))
+              ]),
             ],
           ),
         ),
@@ -150,27 +145,33 @@ class ExperimentSettingsValues extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween);
     }
 
-    List<Widget> settingsValues; 
-    if (settings is VoltammetrySettings){
+    List<Widget> settingsValues;
+    if (settings is VoltammetrySettings) {
       settingsValues = [
-        Row(children:[Expanded(child:settingsText('Cyclic Voltammetry'))]),
+        Row(children: [Expanded(child: settingsText('Cyclic Voltammetry'))]),
         settingsRow("Initial Voltage", settings.initialVoltage, "V"),
-        settingsRow("Vertex Voltage", (settings as VoltammetrySettings).vertexVoltage, "V"),  // settings.highVoltage, "V"),
-        settingsRow("Final Voltage", (settings as VoltammetrySettings).finalVoltage, "V"),  // settings.highVoltage, "V"),
+        settingsRow("Vertex Voltage", (settings as VoltammetrySettings).vertexVoltage, "V"), // settings.highVoltage, "V"),
+        settingsRow("Final Voltage", (settings as VoltammetrySettings).finalVoltage, "V"), // settings.highVoltage, "V"),
         settingsRow("Scan Rate", (settings as VoltammetrySettings).scanRate, "V/s"), // settings.scanRate, "V/s"),
         settingsRow("Sweep Segments", (settings as VoltammetrySettings).sweepSegments, ""), //  settings.sweepSegments, ""),
         settingsRow("Sample Interval", settings.sampleInterval, "V"),
         settingsRow("Gain Setting", settings.gainSetting.describeEnum(), ""),
-        settingsRow("Electrode", settings.electrode.toString().split('.').last, "")
+        settingsRow("Electrode", settings.electrode
+            .toString()
+            .split('.')
+            .last, "")
       ];
     } else {
       settingsValues = [
-        Row(children: [Expanded(child:settingsText('Amperometry'))]),
+        Row(children: [Expanded(child: settingsText('Amperometry'))]),
         settingsRow("Initial Voltage", settings.initialVoltage, "V"),
         settingsRow("Sample Interval", settings.sampleInterval, "V"),
         settingsRow("Runtime", (settings as AmperometrySettings).runtime, "S"),
         settingsRow("Gain Setting", settings.gainSetting.describeEnum(), ""),
-        settingsRow("Electrode", settings.electrode.toString().split('.').last, "")
+        settingsRow("Electrode", settings.electrode
+            .toString()
+            .split('.')
+            .last, "")
       ];
     }
     return Padding(
@@ -212,86 +213,93 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   double i, j; // TODO temp: remove later
   Timer callbackTimer;
 
-
-
   Future<bool> saveLocally(String fileName) async {
     return await widget.experiment.saveExperiment(fileName);
   }
 
   Future<bool> shareFiles() async {
     String fileName;
-    await showDialog(context: context, builder: (BuildContext context)=>FileNamePopup(onSave: (String name){fileName = name; return Future<bool>.value(true);}));
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) =>
+            FileNamePopup(onSave: (String name) {
+              fileName = name;
+              return Future<bool>.value(true);
+            }));
     Directory appDocDir = await getApplicationDocumentsDirectory();
-    Directory experimentDir = Directory(appDocDir.path+'/temp/');
-    if (!await experimentDir.exists()){
+    Directory experimentDir = Directory(appDocDir.path + '/temp/');
+    if (!await experimentDir.exists()) {
       experimentDir = await experimentDir.create();
     }
     File experimentFile = new File(experimentDir.path + fileName + '.txt');
     await experimentFile.writeAsString(widget.experiment.toString());
-    await Share.shareFiles([
-        '${experimentDir.path}$fileName.txt']);
+    await Share.shareFiles(['${experimentDir.path}$fileName.txt']);
     await experimentFile.delete();
     return true;
   }
+
 /*
   void onBTDisconnect(){
     sweepStatBTConnection = null;
     Scaffold.of(context).showSnackBar(SnackBar(content: Text('Bluetooth Disconnected')));
-  
+
   }*/
 
-  Future<void> bluetooth() async {
-    if (sweepStatBTConnection == null){
-      FlutterBlue flutterBlue = FlutterBlue.instance;
-      BluetoothDevice device;
-      // Start scanning
-      flutterBlue.startScan(timeout: Duration(seconds: 10));
-
-      int i = 0;
-      await for (List<ScanResult> results in flutterBlue.scanResults){
-        print('scanning');
-        print(results);
-        for (ScanResult r in results) {
-          print(r.device.id);
-            if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")){
-              print("FOUND");
-              device = r.device;
-              flutterBlue.stopScan();
-              print('stopping scan');
-              break;
-            }
-        }
-        i++;
-        if (i > 10) break;
-      }
-      flutterBlue.stopScan();
-      List devices = await flutterBlue.connectedDevices;
-      print(devices);
-      print(device);
-      print('hola');
-      if (device == null && devices.length >= 1) {
-        device = devices[0];
-      } else {
-        if (device == null) return;
-        await device.connect();
-      }
-      print('here');
-
+  Future<void> bluetooth(BuildContext context) async {
+    if (sweepStatBTConnection == null) {
+      // FlutterBlue flutterBlue = FlutterBlue.instance;
+      // BluetoothDevice device;
+      // // Start scanning
+      // flutterBlue.startScan(timeout: Duration(seconds: 10));
+      //
+      // int i = 0;
+      // await for (List<ScanResult> results in flutterBlue.scanResults) {
+      //   print('scanning');
+      //   print(results);
+      //   for (ScanResult r in results) {
+      //     print(r.device.id);
+      //     if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")) {
+      //       print("FOUND");
+      //       device = r.device;
+      //       flutterBlue.stopScan();
+      //       print('stopping scan');
+      //       break;
+      //     }
+      //   }
+      //   i++;
+      //   if (i > 10) break;
+      // }
+      // flutterBlue.stopScan();
+      // List devices = await flutterBlue.connectedDevices;
+      // print(devices);
+      // print(device);
+      // print('hola');
+      // if (device == null && devices.length >= 1) {
+      //   device = devices[0];
+      // } else {
+      //   if (device == null) return;
+      //   await device.connect();
+      // }
+      // print('here');
+      BluetoothDevice device = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return BlueToothSelection();
+          }) as BluetoothDevice;
       Utf8Decoder dec = Utf8Decoder();
+      await device.connect();
       sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
-      sweepStatBTConnection.addNotifyListener((List<int> ints){
+      sweepStatBTConnection.addNotifyListener((List<int> ints) {
+        print("HERE");
+        print(ints);
         print(dec.convert(ints));
       });
+      setState(() {
+        sweepStatBTConnection = sweepStatBTConnection;
+      });
       print('ready to send');
-
     }
-
-    sweepStatBTConnection.writeToSweepStat('.');
-
-
-
   }
-
 
   void initState() {
     data_L = LineChartBarData(
@@ -306,15 +314,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   void dispose() {
     super.dispose();
-    if (callbackTimer != null){
+    if (callbackTimer != null) {
       callbackTimer.cancel();
     }
   }
 
-  bool locki = false;
-  bool lockii = false;
-
   Widget build(BuildContext context) {
+    bool canStart = sweepStatBTConnection != null;
+
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
@@ -362,8 +369,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       lineBarsData: [data_L, data_R],
                       axisTitleData: FlAxisTitleData(
                         show: true,
-                        leftTitle:
-                        AxisTitle(showTitle: true, titleText: widget.experiment.settings.gainSetting == GainSettings.nA10 ? "Current/nA" : "Current/µA", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
+                        leftTitle: AxisTitle(
+                            showTitle: true,
+                            titleText: widget.experiment.settings.gainSetting == GainSettings.nA10 ? "Current/nA" : "Current/µA",
+                            textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         bottomTitle:
                         AxisTitle(showTitle: true, titleText: "Potential/V", textStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.black)),
                         topTitle: AxisTitle(
@@ -376,9 +385,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
-                      await showDialog(
-                        context: context, 
-                        builder: (BuildContext context)=>FileNamePopup(onSave: saveLocally));
+                      await showDialog(context: context, builder: (BuildContext context) => FileNamePopup(onSave: saveLocally));
                     },
                     child: Text(
                       "Save",
@@ -387,63 +394,24 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     color: Colors.blue,
                     child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
-                    onPressed: () async {
-                      
-                      if (widget.experiment.dataL.length > 1 && widget.experiment.dataR.length >1 && !await showDialog(
-                        context: context,
-                        builder: (BuildContext context)=>AlertDialog(
-                          title: Text('Warning'),
-                          content: Text('Are you sure you want to start the experiment? This will delete existing experiment data'),
-                          actions: <Widget>[
-                            MaterialButton(
-                                child: Text('Confirm'),
-                                onPressed: (){Navigator.of(context).pop(true);}),
-                            
-                            MaterialButton(
-                                child: Text('Cancel'),
-                                onPressed: (){Navigator.of(context).pop(false);})
-                          ]
-                        )
-                      )) return;
-                      
-                      setState((){
-                        widget.experiment.dataL = [FlSpot(0.0, 0.0)];
-                        widget.experiment.dataR = [FlSpot(0.0, 0.0)];
-                        data_L = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
-                        data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
-                        i = 0.0;
-                        j = 0.0;
-                      });
-                      callbackTimer = Timer.periodic(new Duration(milliseconds: 20), (timer) {
-                        if (mounted){
-                          setState(() {
-                            if (i > 5) {
-                              callbackTimer.cancel();
-                              return;
-                            }
-                            widget.experiment.dataL.add(new FlSpot(i + 0.0, i * i));
-                            widget.experiment.dataR.add(new FlSpot(j, cos(-j * j)));
-                            i += .3;
-                            j += .3;
-                          });
-                        }
-                      });
-                    }),
+                    onPressed: sweepStatBTConnection == null ? null : (){
+                      sweepStatBTConnection.writeToSweepStat('.');
+
+                    } ),
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
                       await shareFiles();
                     },
                     child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15))),
-                Builder(builder: (context)=>RaisedButton(
-                    color: Colors.blue,
-                    onPressed: bluetooth,
-                    child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
-                
+                Builder(
+                    builder: (context) =>
+                        RaisedButton(color: Colors.blue, onPressed: () {
+                          bluetooth(context);
+                        }, child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
               ]),
             ]),
           ),
         ));
   }
 }
-
