@@ -201,8 +201,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   Utf8Decoder dec = Utf8Decoder();
   String incString = "";
 
-  LineChartBarData data_L;
-  LineChartBarData data_R;
+  LineChartBarData dataL;
+  LineChartBarData dataR;
   double i, j; // TODO temp: remove later
   Timer callbackTimer;
 
@@ -273,11 +273,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void initState() {
-    data_L = LineChartBarData(
+    dataL = LineChartBarData(
       spots: widget.experiment.dataL,
       isCurved: true,
     );
-    data_R = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
+    dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
     i = 0.0; // TODO: temp remove, later
     j = 0.0;
     super.initState();
@@ -335,7 +335,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       minX: 0,
                       // widget.experiment.settings.lowVoltage,
                       clipData: FlClipData.all(),
-                      lineBarsData: [data_L, data_R],
+                      lineBarsData: [dataL, dataR],
                       axisTitleData: FlAxisTitleData(
                         show: true,
                         leftTitle: AxisTitle(
