@@ -40,7 +40,6 @@ class SweepStatBTConnection {
     List<BluetoothService> services = await d.discoverServices();
 
     for (BluetoothService service in services){
-      print(service);
       if (service.uuid == Guid(sweepstatServiceUUID)){
           for(BluetoothCharacteristic c in service.characteristics) {
             if (c.uuid == Guid(sweepstatCharacteristicUUID)){

@@ -207,6 +207,8 @@ class AnalysisScreen extends StatefulWidget {
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   SweepStatBTConnection sweepStatBTConnection;
+  Utf8Decoder dec = Utf8Decoder();
+  String incString = "";
 
   LineChartBarData data_L;
   LineChartBarData data_R;
@@ -288,15 +290,70 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           }) as BluetoothDevice;
       Utf8Decoder dec = Utf8Decoder();
       await device.connect();
-      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
-      sweepStatBTConnection.addNotifyListener((List<int> ints) {
-        print("HERE");
-        print(ints);
-        print(dec.convert(ints));
+  void plotBTPoint(List<int> intMessage){
+    if (dec.convert(intMessage) == "\$") return;
+    String message = dec.convert(intMessage);
+    if (!message.endsWith('}')){
+      incString = message;
+      return;
+    }
+    message = incString + message;
+    incString = "";
+    List<String> parts = message.split(',');
+    double volt = double.parse(parts[1].substring(2));
+    double charge = double.parse(parts[2].substring(2, parts[2].length-1));
+    if (mounted){
+      setState((){
+        widget.experiment.dataL.add(new FlSpot(volt, charge));
       });
+    }
+  }
+
+
+  Future<void> bluetooth() async {
+    if (sweepStatBTConnection == null){
+      FlutterBlue flutterBlue = FlutterBlue.instance;
+      BluetoothDevice device;
+      // Start scanning
+      flutterBlue.startScan(timeout: Duration(seconds: 10));
+
+      int i = 0;
+      await for (List<ScanResult> results in flutterBlue.scanResults){
+        print('scanning');
+        print(results);
+        for (ScanResult r in results) {
+          print(r.device.id);
+            if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")){
+              print("FOUND");
+              device = r.device;
+              flutterBlue.stopScan();
+              print('stopping scan');
+              break;
+            }
+        }
+        i++;
+        if (i > 10) break;
+      }
+      flutterBlue.stopScan();
+      print('scan stopped');
+      List devices = await flutterBlue.connectedDevices;
+      print(devices);
+      print(device);
+      print('hola');
+      if (device == null && devices.length >= 1) {
+        device = devices[0];
+        print('added existing device');
+      } else {
+        if (device == null) return;
+        await device.connect();
+      }
+      print('here');
+
+      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
       setState(() {
         sweepStatBTConnection = sweepStatBTConnection;
       });
+      await sweepStatBTConnection.addNotifyListener(plotBTPoint);
       print('ready to send');
     }
   }
@@ -361,7 +418,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
                   child: LineChart(LineChartData(
-                      maxX: 5,
+                      maxX: 1,
                       // widget.experiment.settings.vertexVoltage,
                       minX: 0,
                       // widget.experiment.settings.lowVoltage,
@@ -415,3 +472,4 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         ));
   }
 }
+
