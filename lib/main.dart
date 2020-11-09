@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:sweep_stat_app/bluetooth_mangement.dart';
+import 'package:sweep_stat_app/bluetooth_management.dart';
 import 'guided_setup.dart';
 import 'advanced_setup.dart';
 import 'load_configuration.dart';

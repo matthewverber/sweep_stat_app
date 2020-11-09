@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:io';
 import 'dart:convert';
 
@@ -11,7 +10,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
-import 'bluetooth_mangement.dart';
+import 'bluetooth_management.dart';
 import 'experiment_settings.dart';
 import 'bluetooth_connection.dart';
 
@@ -141,7 +140,7 @@ class ExperimentSettingsValues extends StatelessWidget {
 
     Widget settingsRow(String settingName, dynamic settingValue, String unitSymbol) {
       return Row(
-          children: [Expanded(child: settingsText('$settingName')), settingsText('${settingValue} $unitSymbol')],
+          children: [Expanded(child: settingsText('$settingName')), settingsText('$settingValue $unitSymbol')],
           mainAxisAlignment: MainAxisAlignment.spaceBetween);
     }
 
@@ -156,10 +155,7 @@ class ExperimentSettingsValues extends StatelessWidget {
         settingsRow("Sweep Segments", (settings as VoltammetrySettings).sweepSegments, ""), //  settings.sweepSegments, ""),
         settingsRow("Sample Interval", settings.sampleInterval, "V"),
         settingsRow("Gain Setting", settings.gainSetting.describeEnum(), ""),
-        settingsRow("Electrode", settings.electrode
-            .toString()
-            .split('.')
-            .last, "")
+        settingsRow("Electrode", settings.electrode.toString().split('.').last, "")
       ];
     } else {
       settingsValues = [
@@ -168,10 +164,7 @@ class ExperimentSettingsValues extends StatelessWidget {
         settingsRow("Sample Interval", settings.sampleInterval, "V"),
         settingsRow("Runtime", (settings as AmperometrySettings).runtime, "S"),
         settingsRow("Gain Setting", settings.gainSetting.describeEnum(), ""),
-        settingsRow("Electrode", settings.electrode
-            .toString()
-            .split('.')
-            .last, "")
+        settingsRow("Electrode", settings.electrode.toString().split('.').last, "")
       ];
     }
     return Padding(
@@ -223,11 +216,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     String fileName;
     await showDialog(
         context: context,
-        builder: (BuildContext context) =>
-            FileNamePopup(onSave: (String name) {
-              fileName = name;
-              return Future<bool>.value(true);
-            }));
+        builder: (BuildContext context) => FileNamePopup(onSave: (String name) {
+          fileName = name;
+          return Future<bool>.value(true);
+        }));
     Directory appDocDir = await getApplicationDocumentsDirectory();
     Directory experimentDir = Directory(appDocDir.path + '/temp/');
     if (!await experimentDir.exists()) {
@@ -246,54 +238,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     Scaffold.of(context).showSnackBar(SnackBar(content: Text('Bluetooth Disconnected')));
 
   }*/
-
-  Future<void> bluetooth(BuildContext context) async {
-    if (sweepStatBTConnection == null) {
-      // FlutterBlue flutterBlue = FlutterBlue.instance;
-      // BluetoothDevice device;
-      // // Start scanning
-      // flutterBlue.startScan(timeout: Duration(seconds: 10));
-      //
-      // int i = 0;
-      // await for (List<ScanResult> results in flutterBlue.scanResults) {
-      //   print('scanning');
-      //   print(results);
-      //   for (ScanResult r in results) {
-      //     print(r.device.id);
-      //     if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")) {
-      //       print("FOUND");
-      //       device = r.device;
-      //       flutterBlue.stopScan();
-      //       print('stopping scan');
-      //       break;
-      //     }
-      //   }
-      //   i++;
-      //   if (i > 10) break;
-      // }
-      // flutterBlue.stopScan();
-      // List devices = await flutterBlue.connectedDevices;
-      // print(devices);
-      // print(device);
-      // print('hola');
-      // if (device == null && devices.length >= 1) {
-      //   device = devices[0];
-      // } else {
-      //   if (device == null) return;
-      //   await device.connect();
-      // }
-      // print('here');
-      BluetoothDevice device = await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return BlueToothSelection();
-          }) as BluetoothDevice;
-      Utf8Decoder dec = Utf8Decoder();
-      await device.connect();
-  void plotBTPoint(List<int> intMessage){
+  void plotBTPoint(List<int> intMessage) {
     if (dec.convert(intMessage) == "\$") return;
     String message = dec.convert(intMessage);
-    if (!message.endsWith('}')){
+    if (!message.endsWith('}')) {
       incString = message;
       return;
     }
@@ -301,54 +249,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     incString = "";
     List<String> parts = message.split(',');
     double volt = double.parse(parts[1].substring(2));
-    double charge = double.parse(parts[2].substring(2, parts[2].length-1));
-    if (mounted){
-      setState((){
+    double charge = double.parse(parts[2].substring(2, parts[2].length - 1));
+    if (mounted) {
+      setState(() {
         widget.experiment.dataL.add(new FlSpot(volt, charge));
       });
     }
   }
 
-
-  Future<void> bluetooth() async {
-    if (sweepStatBTConnection == null){
-      FlutterBlue flutterBlue = FlutterBlue.instance;
-      BluetoothDevice device;
-      // Start scanning
-      flutterBlue.startScan(timeout: Duration(seconds: 10));
-
-      int i = 0;
-      await for (List<ScanResult> results in flutterBlue.scanResults){
-        print('scanning');
-        print(results);
-        for (ScanResult r in results) {
-          print(r.device.id);
-            if (r.device.id == DeviceIdentifier("78:DB:2F:13:BB:0F")){
-              print("FOUND");
-              device = r.device;
-              flutterBlue.stopScan();
-              print('stopping scan');
-              break;
-            }
-        }
-        i++;
-        if (i > 10) break;
-      }
-      flutterBlue.stopScan();
-      print('scan stopped');
-      List devices = await flutterBlue.connectedDevices;
-      print(devices);
-      print(device);
-      print('hola');
-      if (device == null && devices.length >= 1) {
-        device = devices[0];
-        print('added existing device');
-      } else {
-        if (device == null) return;
-        await device.connect();
-      }
-      print('here');
-
+  Future<void> bluetooth(BuildContext context) async {
+    if (sweepStatBTConnection == null) {
+      BluetoothDevice device = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return BlueToothSelection();
+          }) as BluetoothDevice;
+      await device.connect();
       sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
       setState(() {
         sweepStatBTConnection = sweepStatBTConnection;
@@ -377,8 +293,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget build(BuildContext context) {
-    bool canStart = sweepStatBTConnection != null;
-
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
@@ -422,7 +336,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       // widget.experiment.settings.vertexVoltage,
                       minX: 0,
                       // widget.experiment.settings.lowVoltage,
-                      clipData: FlClipData.vertical(),
+                      clipData: FlClipData.all(),
                       lineBarsData: [data_L, data_R],
                       axisTitleData: FlAxisTitleData(
                         show: true,
@@ -451,10 +365,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 RaisedButton(
                     color: Colors.blue,
                     child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
-                    onPressed: sweepStatBTConnection == null ? null : (){
+                    onPressed: sweepStatBTConnection == null
+                        ? null
+                        : () {
                       sweepStatBTConnection.writeToSweepStat('.');
-
-                    } ),
+                    }),
                 RaisedButton(
                     color: Colors.blue,
                     onPressed: () async {
@@ -462,14 +377,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     },
                     child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15))),
                 Builder(
-                    builder: (context) =>
-                        RaisedButton(color: Colors.blue, onPressed: () {
+                    builder: (context) => RaisedButton(
+                        color: Colors.blue,
+                        onPressed: () {
                           bluetooth(context);
-                        }, child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
+                        },
+                        child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
               ]),
             ]),
           ),
         ));
   }
 }
-
