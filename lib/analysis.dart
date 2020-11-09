@@ -15,8 +15,6 @@ import 'experiment_settings.dart';
 import 'bluetooth_connection.dart';
 
 class FileNamePopup extends StatefulWidget {
-  // TODO: Might not be needed since we are getting a project name and can have a generic _config _experimentube
-
   final Function onSave;
 
   FileNamePopup({Key key, this.onSave}) : super(key: key);
