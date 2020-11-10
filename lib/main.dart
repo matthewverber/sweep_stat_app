@@ -1,9 +1,12 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:sweep_stat_app/bluetooth_management.dart';
-import 'guided_setup.dart';
+import 'package:sweep_stat_app/menu_buttons.dart';
 import 'advanced_setup.dart';
+import 'guided_setup.dart';
 import 'load_configuration.dart';
+import 'menu_buttons.dart';
 import 'recent_results.dart';
 
 void main() {
@@ -58,7 +61,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice _bluetoothDevice;
 
-  Widget _buildPrimaryButton(String buttonText, Widget route) {
+  /*Widget _buildPrimaryButton(String buttonText, Widget route) {
     return Container(
         margin: EdgeInsets.all(10),
         child: SizedBox(
@@ -72,14 +75,18 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.all(5.0),
               splashColor: Colors.blueAccent,
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => route));
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => route));
               },
               child: Text(
                 buttonText,
-                style: TextStyle(fontFamily: 'Roboto', fontSize: 12.0, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w500),
               ),
             )));
-  }
+  }*/
 
   Widget _buildSecondaryButton(String buttonText, Widget route) {
     return OutlineButton(
@@ -122,8 +129,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildPrimaryButton("GUIDED SETUP", GuidedSetup()),
-                    _buildPrimaryButton("ADVANCED SETUP", AdvancedSetup()),
+                    //_buildPrimaryButton("GUIDED SETUP", GuidedSetup()),
+                    //_buildPrimaryButton("ADVANCED SETUP", AdvancedSetup()),
+                    PrimaryMenuButton("GUIDED SETUP", Key("guided-setup"),
+                        MaterialPageRoute(builder: (context) => GuidedSetup())),
+                    PrimaryMenuButton(
+                        "ADVANCED SETUP",
+                        Key('advanced-setup'),
+                        MaterialPageRoute(
+                            builder: (context) => AdvancedSetup())),
                   ],
                 ),
               ),
@@ -147,7 +161,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildSecondaryButton("RECENT RESULTS", RecentResults()), // TODO: Needs recent results widget route
+                    _buildSecondaryButton("RECENT RESULTS",
+                        RecentResults()), // TODO: Needs recent results widget route
                     _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
                   ],
                 ),
@@ -159,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ])
-      /* Center(
+        /* Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
@@ -257,11 +272,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ), */
-      /*floatingActionButton: FloatingActionButton(
+        /*floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ),*/ // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        );
   }
 }
