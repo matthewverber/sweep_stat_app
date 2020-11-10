@@ -61,33 +61,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice _bluetoothDevice;
 
-  /*Widget _buildPrimaryButton(String buttonText, Widget route) {
-    return Container(
-        margin: EdgeInsets.all(10),
-        child: SizedBox(
-            width: 200,
-            height: 50,
-            child: FlatButton(
-              color: Colors.blue,
-              textColor: Colors.white,
-              disabledColor: Colors.grey,
-              disabledTextColor: Colors.black,
-              padding: EdgeInsets.all(5.0),
-              splashColor: Colors.blueAccent,
-              onPressed: () {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => route));
-              },
-              child: Text(
-                buttonText,
-                style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w500),
-              ),
-            )));
-  }*/
-
   Widget _buildSecondaryButton(String buttonText, Widget route) {
     return OutlineButton(
       color: Colors.grey,
@@ -129,8 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    //_buildPrimaryButton("GUIDED SETUP", GuidedSetup()),
-                    //_buildPrimaryButton("ADVANCED SETUP", AdvancedSetup()),
                     PrimaryMenuButton("GUIDED SETUP", Key("guided-setup"),
                         MaterialPageRoute(builder: (context) => GuidedSetup())),
                     PrimaryMenuButton(
@@ -161,9 +132,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildSecondaryButton("RECENT RESULTS",
-                        RecentResults()), // TODO: Needs recent results widget route
-                    _buildSecondaryButton("LOAD CONFIG", LoadConfig()),
+                    SecondaryMenuButton(
+                        "RECENT RESULTS",
+                        Key('recent-results'),
+                        MaterialPageRoute(
+                            builder: (context) => RecentResults())),
+                    SecondaryMenuButton("LOAD CONFIG", Key('load-config'),
+                        MaterialPageRoute(builder: (context) => LoadConfig())),
                   ],
                 ),
               ),

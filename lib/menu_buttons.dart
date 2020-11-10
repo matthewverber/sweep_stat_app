@@ -42,12 +42,25 @@ class PrimaryMenuButton extends MenuButton {
 }
 
 class SecondaryMenuButton extends MenuButton {
-  SecondaryMenuButton({String text, Key key, Route route})
+  SecondaryMenuButton(String text, Key key, Route route)
       : super(text, key, route);
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+    return OutlineButton(
+      color: Colors.grey,
+      textColor: Colors.blue,
+      disabledBorderColor: Colors.grey,
+      disabledTextColor: Colors.grey,
+      padding: EdgeInsets.all(8.0),
+      splashColor: Colors.blueAccent,
+      onPressed: () {
+        Navigator.push(context, route);
+      },
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 20.0),
+      ),
+    );
   }
 }
