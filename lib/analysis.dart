@@ -200,10 +200,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   SweepStatBTConnection sweepStatBTConnection;
   Utf8Decoder dec = Utf8Decoder();
   String incString = "";
+  bool isExperimentInProgress = false;
 
   LineChartBarData dataL;
   LineChartBarData dataR;
-  double i, j; // TODO temp: remove later
   Timer callbackTimer;
 
   Future<bool> saveLocally(String fileName) async {
@@ -230,12 +230,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return true;
   }
 
-/*
-  void onBTDisconnect(){
-    sweepStatBTConnection = null;
+
+  void onBTDisconnect(BuildContext context){
+    setState((){
+      sweepStatBTConnection = null;
+    });
     Scaffold.of(context).showSnackBar(SnackBar(content: Text('Bluetooth Disconnected')));
 
-  }*/
+  }
+
   void plotBTPoint(List<int> intMessage) {
     if (dec.convert(intMessage) == "\$") return;
     String message = dec.convert(intMessage);
@@ -245,6 +248,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
     message = incString + message;
     incString = "";
+    print(message);
     List<String> parts = message.split(',');
     double volt = double.parse(parts[1].substring(2));
     double charge = double.parse(parts[2].substring(2, parts[2].length - 1));
@@ -263,12 +267,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             return BlueToothSelection();
           }) as BluetoothDevice;
       await device.connect();
-      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, null);
+      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, onBTDisconnect);
       setState(() {
         sweepStatBTConnection = sweepStatBTConnection;
       });
       await sweepStatBTConnection.addNotifyListener(plotBTPoint);
-      print('ready to send');
     }
   }
 
@@ -278,8 +281,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       isCurved: true,
     );
     dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
-    i = 0.0; // TODO: temp remove, later
-    j = 0.0;
     super.initState();
   }
 
@@ -366,7 +367,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     onPressed: sweepStatBTConnection == null
                         ? null
                         : () {
-                      sweepStatBTConnection.writeToSweepStat('.');
+                          if (isExperimentInProgress){
+
+                          } else {
+                            sweepStatBTConnection.writeToSweepStat('.');
+                          }
                     }),
                 RaisedButton(
                     color: Colors.blue,
