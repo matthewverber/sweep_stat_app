@@ -65,8 +65,8 @@ class _BlueToothSelectionState extends State<BlueToothSelection> {
                               ),
                               onTap: () async {
                                 Navigator.pop(context, r.device);
-                                SweepStatBTConnection connection = await SweepStatBTConnection.createSweepBTConnection(r.device, () {});
-                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => MyHomePage()));
+                                //SweepStatBTConnection connection = await SweepStatBTConnection.createSweepBTConnection(r.device, () {});
+                                //Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => MyHomePage()));
                               },
                             ),
                           );

@@ -318,9 +318,11 @@ class _SetupFormState extends State<SetupForm> {
                     flex: 5,
                     child: RaisedButton(
                         onPressed: () {
+                          print('loading');
                           if (_loadVariables()) {
                             Experiment currentExperiment =
                                 new Experiment(experimentSettings);
+                            print('experiment and values loaded');
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (BuildContext context) => AnalysisScreen(
                                       experiment: currentExperiment,

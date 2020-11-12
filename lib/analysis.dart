@@ -240,7 +240,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void plotBTPoint(List<int> intMessage) {
-    if (dec.convert(intMessage) == "\$") return;
+    if (dec.convert(intMessage) == "\$") {
+      isExperimentInProgress = false;
+      return;
+    }
     String message = dec.convert(intMessage);
     if (!message.endsWith('}')) {
       incString = message;
@@ -266,6 +269,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           builder: (BuildContext context) {
             return BlueToothSelection();
           }) as BluetoothDevice;
+      if (device == null) return;
       await device.connect();
       sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, onBTDisconnect);
       setState(() {
@@ -276,6 +280,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void initState() {
+    print('init state');
     dataL = LineChartBarData(
       spots: widget.experiment.dataL,
       isCurved: true,
@@ -351,42 +356,69 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
 //              ExperimentSettingsValues(settings: widget.experiment.settings),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-                RaisedButton(
-                    color: Colors.blue,
-                    onPressed: () async {
-                      await showDialog(context: context, builder: (BuildContext context) => FileNamePopup(onSave: saveLocally));
-                    },
-                    child: Text(
-                      "Save",
-                      style: TextStyle(color: Colors.white, fontSize: 15),
-                    )),
-                RaisedButton(
-                    color: Colors.blue,
-                    child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
-                    onPressed: sweepStatBTConnection == null
-                        ? null
-                        : () {
-                          if (isExperimentInProgress){
-
-                          } else {
-                            sweepStatBTConnection.writeToSweepStat('.');
-                          }
-                    }),
-                RaisedButton(
-                    color: Colors.blue,
-                    onPressed: () async {
-                      await shareFiles();
-                    },
-                    child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15))),
-                Builder(
-                    builder: (context) => RaisedButton(
-                        color: Colors.blue,
-                        onPressed: () {
-                          bluetooth(context);
-                        },
-                        child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
-              ]),
+              Container(
+                height: 100, 
+                child: ListView(scrollDirection: Axis.horizontal, children: [
+                  RaisedButton(
+                      color: Colors.blue,
+                      onPressed: () async {
+                        await showDialog(context: context, builder: (BuildContext context) => FileNamePopup(onSave: saveLocally));
+                      },
+                      child: Text(
+                        "Save",
+                        style: TextStyle(color: Colors.white, fontSize: 15),
+                      )),
+                  Builder(
+                    builder: (context)=>RaisedButton(
+                      color: Colors.blue,
+                      child: Text("Start", style: TextStyle(color: Colors.white, fontSize: 15)),
+                      onPressed: sweepStatBTConnection == null
+                          ? null
+                          : () async {
+                            if (isExperimentInProgress){
+                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('Experiment Already in Progress')));
+                            } else if ((widget.experiment.dataL.length > 1 || widget.experiment.dataR.length >1) && !await showDialog(
+                                context: context,
+                                builder: (BuildContext context)=>AlertDialog(
+                                  title: Text('Warning'),
+                                  content: Text('Are you sure you want to start the experiment? This will delete existing experiment data'),
+                                  actions: <Widget>[
+                                    MaterialButton(
+                                        child: Text('Confirm'),
+                                        onPressed: (){Navigator.of(context).pop(true);}),
+                                    
+                                    MaterialButton(
+                                        child: Text('Cancel'),
+                                        onPressed: (){Navigator.of(context).pop(false);})
+                                  ]
+                                )
+                              )){
+                                print('here');
+                                return;
+                            }
+                            else {
+                              sweepStatBTConnection.writeToSweepStat('.');
+                              isExperimentInProgress = true;
+                            }
+                      })
+                  ),
+                  
+                  RaisedButton(
+                      color: Colors.blue,
+                      onPressed: () async {
+                        await shareFiles();
+                      },
+                      child: Text("Share", style: TextStyle(color: Colors.white, fontSize: 15))),
+                  Builder(
+                      builder: (context) => RaisedButton(
+                          color: Colors.blue,
+                          onPressed: () {
+                            bluetooth(context);
+                          },
+                          child: Text("Bluetooth", style: TextStyle(color: Colors.white, fontSize: 15))))
+                ]),
+              )
+              
             ]),
           ),
         ));
