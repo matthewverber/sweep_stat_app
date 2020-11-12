@@ -140,5 +140,7 @@ TBD due to in-process licensing agreements with client
 
 The development team would like to thank Matthew Verber, Matthew Glascott, and Rebecca Clark of the SweepStat team for their effective and continuous communication as our client. They made themselves available each week to hear about the progress of our development, give feedback, and address any uncertainty we had about design choices (and chemistry jargon). Additionally, we appreciate the time and resources they provided us in learning how the SweepStat hardware works and the purpose it serves.
 
-We also thank our professor, Dr. Jeff Terrell, for all of the wisdom he shared in lectures as an experienced software engineer, and for his good taste in music.
+We also thank Jared Chmielecki, our mentor, who volunteered his time each week to give feedback and advice on our development process and share insights from his own industry experience as a software engineer.
+
+Finally, we thank our professor, Dr. Jeff Terrell, for all of the wisdom he shared in lectures as an experienced software engineer, and for his good taste in music.
 
