@@ -75,15 +75,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       PrimaryMenuButton(
-                          "GUIDED SETUP",
-                          Key("guided-setup"),
-                          MaterialPageRoute(
-                              builder: (context) => GuidedSetup())),
-                      PrimaryMenuButton(
-                          "ADVANCED SETUP",
-                          Key('advanced-setup'),
-                          MaterialPageRoute(
-                              builder: (context) => AdvancedSetup())),
+                          "GUIDED SETUP", Key("guided-setup"), GuidedSetup()),
+                      PrimaryMenuButton("ADVANCED SETUP", Key('advanced-setup'),
+                          AdvancedSetup()),
                     ],
                   ),
                 )),
@@ -95,16 +89,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      SecondaryMenuButton("RECENT RESULTS",
+                          Key('recent-results'), RecentResults()),
                       SecondaryMenuButton(
-                          "RECENT RESULTS",
-                          Key('recent-results'),
-                          MaterialPageRoute(
-                              builder: (context) => RecentResults())),
-                      SecondaryMenuButton(
-                          "LOAD CONFIG",
-                          Key('load-config'),
-                          MaterialPageRoute(
-                              builder: (context) => LoadConfig())),
+                          "LOAD CONFIG", Key('load-config'), LoadConfig()),
                     ],
                   ),
                 )),

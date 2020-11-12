@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 abstract class MenuButton extends StatelessWidget {
   final Key key;
   final String text;
-  final Route route;
+  final Widget widget;
 
-  MenuButton(this.text, this.key, this.route);
+  MenuButton(this.text, this.key, this.widget);
 }
 
 class PrimaryMenuButton extends MenuButton {
-  PrimaryMenuButton(String text, Key key, Route route)
-      : super(text, key, route);
+  PrimaryMenuButton(String text, Key key, Widget widget)
+      : super(text, key, widget);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,8 @@ class PrimaryMenuButton extends MenuButton {
             borderRadius: BorderRadius.circular(5.0),
           ),
           onPressed: () {
-            Navigator.push(context, route);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => widget));
           },
           child: Text(
             text,
@@ -41,8 +42,8 @@ class PrimaryMenuButton extends MenuButton {
 }
 
 class SecondaryMenuButton extends MenuButton {
-  SecondaryMenuButton(String text, Key key, Route route)
-      : super(text, key, route);
+  SecondaryMenuButton(String text, Key key, Widget widget)
+      : super(text, key, widget);
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +55,8 @@ class SecondaryMenuButton extends MenuButton {
       padding: EdgeInsets.all(8.0),
       splashColor: Colors.blueAccent,
       onPressed: () {
-        Navigator.push(context, route);
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => widget));
       },
       child: Text(
         text,
