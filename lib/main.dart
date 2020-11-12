@@ -56,8 +56,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
         ),
         body: Container(
@@ -83,7 +81,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 )),
                 Expanded(
                     child: Container(
-                  //color: Colors.blue,
                   width: 300,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -96,33 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                 )),
-                /*Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              //mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PrimaryMenuButton("GUIDED SETUP", Key("guided-setup"),
-                    MaterialPageRoute(builder: (context) => GuidedSetup())),
-                PrimaryMenuButton("ADVANCED SETUP", Key('advanced-setup'),
-                    MaterialPageRoute(builder: (context) => AdvancedSetup())),
-              ],
-            ),
-            //),
-            /*SizedBox(
-              height: 50,
-            ),*/
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SecondaryMenuButton("RECENT RESULTS", Key('recent-results'),
-                    MaterialPageRoute(builder: (context) => RecentResults())),
-                SecondaryMenuButton("LOAD CONFIG", Key('load-config'),
-                    MaterialPageRoute(builder: (context) => LoadConfig())),
-              ],
-            ),
-          */
               ]),
         ));
   }
