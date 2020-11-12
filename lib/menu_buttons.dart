@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 
 abstract class MenuButton extends StatelessWidget {
   final Key key;
@@ -15,25 +14,29 @@ class PrimaryMenuButton extends MenuButton {
 
   @override
   Widget build(BuildContext context) {
-    return FlatButton(
-      color: Colors.blue,
-      textColor: Colors.white,
-      disabledColor: Colors.grey,
-      disabledTextColor: Colors.black,
-      padding: EdgeInsets.all(5.0),
-      splashColor: Colors.blueAccent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5.0),
-      ),
-      onPressed: () {
-        Navigator.push(context, route);
-      },
-      child: Text(
-        text,
-        style: TextStyle(
-            fontFamily: 'Roboto', fontSize: 12.0, fontWeight: FontWeight.w500),
-      ),
-    );
+    return Container(
+        margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+        child: FlatButton(
+          color: Colors.blue,
+          textColor: Colors.white,
+          disabledColor: Colors.grey,
+          disabledTextColor: Colors.black,
+          padding: EdgeInsets.fromLTRB(5.0, 20.0, 5.0, 20.0),
+          splashColor: Colors.blueAccent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+          onPressed: () {
+            Navigator.push(context, route);
+          },
+          child: Text(
+            text,
+            style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 16.0,
+                fontWeight: FontWeight.w500),
+          ),
+        ));
   }
 }
 
@@ -55,7 +58,8 @@ class SecondaryMenuButton extends MenuButton {
       },
       child: Text(
         text,
-        style: TextStyle(fontSize: 15.0),
+        style: TextStyle(
+            fontFamily: 'Roboto', fontSize: 16.0, fontWeight: FontWeight.w500),
       ),
     );
   }
