@@ -142,5 +142,5 @@ The development team would like to thank Matthew Verber, Matthew Glascott, and R
 
 We also thank Jared Chmielecki, our mentor, who volunteered his time each week to give feedback and advice on our development process and share insights from his own industry experience as a software engineer.
 
-Finally, we thank our professor, Dr. Jeff Terrell, for all of the wisdom he shared in lectures as an experienced software engineer, and for his good taste in music.
+Finally, we thank our professor, Dr. Jeff Terrell, for all of the wisdom he shared in lectures in the realm of software design and development, and for his good taste in music.
 
