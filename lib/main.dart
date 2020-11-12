@@ -61,24 +61,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice _bluetoothDevice;
 
-  Widget _buildSecondaryButton(String buttonText, Widget route) {
-    return OutlineButton(
-      color: Colors.grey,
-      textColor: Colors.blue,
-      disabledBorderColor: Colors.grey,
-      disabledTextColor: Colors.grey,
-      padding: EdgeInsets.all(8.0),
-      splashColor: Colors.blueAccent,
-      onPressed: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => route));
-      },
-      child: Text(
-        buttonText,
-        style: TextStyle(fontSize: 20.0),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,171 +69,48 @@ class _MyHomePageState extends State<MyHomePage> {
           // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
         ),
-        body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(),
-              ),
-              Expanded(
-                flex: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    PrimaryMenuButton("GUIDED SETUP", Key("guided-setup"),
-                        MaterialPageRoute(builder: (context) => GuidedSetup())),
-                    PrimaryMenuButton(
-                        "ADVANCED SETUP",
-                        Key('advanced-setup'),
-                        MaterialPageRoute(
-                            builder: (context) => AdvancedSetup())),
-                  ],
-                ),
-              ),
-              Expanded(flex: 3, child: Column()),
-            ],
-          ),
-          SizedBox(
-            height: 100,
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(),
-              ),
-              Expanded(
-                flex: 6,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SecondaryMenuButton(
-                        "RECENT RESULTS",
-                        Key('recent-results'),
-                        MaterialPageRoute(
-                            builder: (context) => RecentResults())),
-                    SecondaryMenuButton("LOAD CONFIG", Key('load-config'),
-                        MaterialPageRoute(builder: (context) => LoadConfig())),
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Column(),
-              ),
-            ],
-          )
-        ])
-        /* Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FlatButton(
-              color: Colors.blue,
-              textColor: Colors.white,
-              disabledColor: Colors.grey,
-              disabledTextColor: Colors.black,
-              padding: EdgeInsets.all(8.0),
-              splashColor: Colors.blueAccent,
-              onPressed: () {
-                /* ... */
-              },
-              child: Text(
-                "GUIDED SETUP",
-                style: TextStyle(fontSize: 20.0),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            /*FractionallySizedBox(
+              widthFactor: 0.5,
+              child:*/
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PrimaryMenuButton("GUIDED SETUP", Key("guided-setup"),
+                      MaterialPageRoute(builder: (context) => GuidedSetup())),
+                  PrimaryMenuButton("ADVANCED SETUP", Key('advanced-setup'),
+                      MaterialPageRoute(builder: (context) => AdvancedSetup())),
+                ],
               ),
             ),
-            FlatButton(
-              color: Colors.blue,
-              textColor: Colors.white,
-              disabledColor: Colors.grey,
-              disabledTextColor: Colors.black,
-              padding: EdgeInsets.all(8.0),
-              splashColor: Colors.blueAccent,
-              onPressed: () {
-                _menuButtonPress(AdvancedSetup());
-              },
-              child: Text(
-                "ADVANCED SETUP",
-                style: TextStyle(fontSize: 20.0),
+            //),
+            /*SizedBox(
+              height: 50,
+            ),*/
+            /*FractionallySizedBox(
+              widthFactor: 0.6,
+              child: */
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SecondaryMenuButton("RECENT RESULTS", Key('recent-results'),
+                      MaterialPageRoute(builder: (context) => RecentResults())),
+                  SecondaryMenuButton("LOAD CONFIG", Key('load-config'),
+                      MaterialPageRoute(builder: (context) => LoadConfig())),
+                ],
               ),
             ),
-            OutlineButton(
-              color: Colors.grey,
-              textColor: Colors.blue,
-              disabledBorderColor: Colors.grey,
-              disabledTextColor: Colors.grey,
-              padding: EdgeInsets.all(8.0),
-              splashColor: Colors.blueAccent,
-              onPressed: () {
-                /*...*/
-              },
-              child: Text(
-                "RECENT RESULTS",
-                style: TextStyle(fontSize: 20.0),
-              ),
-            ),
-            OutlineButton(
-              color: Colors.grey,
-              textColor: Colors.blue,
-              disabledBorderColor: Colors.grey,
-              disabledTextColor: Colors.grey,
-              padding: EdgeInsets.all(8.0),
-              splashColor: Colors.blueAccent,
-              onPressed: () {
-                _menuButtonPress(LoadConfigWrapper());
-              },
-              child: Text(
-                "LOAD CONFIG",
-                style: TextStyle(fontSize: 20.0),
-              ),
-            ),
-            OutlineButton(
-              color: Colors.grey,
-              textColor: Colors.blue,
-              disabledBorderColor: Colors.grey,
-              disabledTextColor: Colors.grey,
-              padding: EdgeInsets.all(8.0),
-              splashColor: Colors.blueAccent,
-              onPressed: () {
-                /* ... */
-              },
-              child: Text(
-                "BLUETOOTH CONNECTION",
-                style: TextStyle(fontSize: 20.0),
-              ),
-            ),
+            //)
           ],
-        ),
-      ), */
-        /*floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),*/ // This trailing comma makes auto-formatting nicer for build methods.
-        );
+        ));
   }
 }
