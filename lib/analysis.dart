@@ -235,6 +235,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     setState((){
       sweepStatBTConnection = null;
     });
+    isExperimentInProgress = false;
+    incString = "";
     Scaffold.of(context).showSnackBar(SnackBar(content: Text('Bluetooth Disconnected')));
 
   }
@@ -242,16 +244,17 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   void plotBTPoint(List<int> intMessage) {
     if (dec.convert(intMessage) == "\$") {
       isExperimentInProgress = false;
+      incString = "";
       return;
     }
     String message = dec.convert(intMessage);
+    print(message);
     if (!message.endsWith('}')) {
       incString = message;
       return;
     }
     message = incString + message;
     incString = "";
-    print(message);
     List<String> parts = message.split(',');
     double volt = double.parse(parts[1].substring(2));
     double charge = double.parse(parts[2].substring(2, parts[2].length - 1));
@@ -271,7 +274,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           }) as BluetoothDevice;
       if (device == null) return;
       await device.connect();
-      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, onBTDisconnect);
+      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, ()=>onBTDisconnect(context));
       setState(() {
         sweepStatBTConnection = sweepStatBTConnection;
       });
@@ -280,7 +283,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void initState() {
-    print('init state');
     dataL = LineChartBarData(
       spots: widget.experiment.dataL,
       isCurved: true,
@@ -297,12 +299,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget build(BuildContext context) {
-    return Scaffold(
+    return 
+      Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
             leading: IconButton(
               icon: Icon(Icons.arrow_back),
-              onPressed: () {
+              onPressed: () async {
+                if (sweepStatBTConnection != null) {
+                  await sweepStatBTConnection.endConnection();
+                  print('ended con');
+                }
+                print('popping');
                 Navigator.of(context).pop();
               },
             ),
@@ -393,10 +401,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                   ]
                                 )
                               )){
-                                print('here');
                                 return;
                             }
                             else {
+                              setState((){
+                                widget.experiment.dataL = [FlSpot(0.0, 0.0)];
+                                widget.experiment.dataR = [FlSpot(0.0, 0.0)];
+                                dataL = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
+                                dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
+                              });
                               sweepStatBTConnection.writeToSweepStat('.');
                               isExperimentInProgress = true;
                             }
@@ -422,5 +435,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ]),
           ),
         ));
+    
   }
 }
