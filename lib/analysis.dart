@@ -328,8 +328,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     dataL = LineChartBarData(
       spots: widget.experiment.dataL,
       isCurved: true,
+      dotData: FlDotData(show: false)
     );
-    dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
+    dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent], dotData: FlDotData(show: false));
     super.initState();
   }
 
@@ -452,8 +453,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                 clearedPlaceholderR = false;
                                 clearedPlaceholderL = false;
                                 isRisingVoltage = true;
-                                dataL = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
-                                dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
+                                dataL = LineChartBarData(spots: widget.experiment.dataL, isCurved: true, dotData: FlDotData(show: false));
+                                dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent], dotData: FlDotData(show: false));
                               });
                               /*
                                 TODO: Send actual data to the SweepStat
