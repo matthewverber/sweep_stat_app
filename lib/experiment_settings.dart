@@ -33,6 +33,20 @@ extension GainExtension on GainSettings {
 
 enum Electrode {pseudoref, silver, calomel, hydrogen}
 
+String variablesToBTString(List<double> variables){
+  String returnString = "";
+  for (int i = 0; i < variables.length; i++){
+    String varString = variables[i].toString();
+    if (varString.length > 8){
+      varString = varString.substring(0, 8);
+    } else if (varString.length < 8) {
+      varString += new List<String>.generate((8 - varString.length), (i) => "0").reduce((value, element) => value += element);
+    }
+    returnString += String.fromCharCode(i + 65) + varString;
+  }
+  return returnString + "Z";
+}
+
 
 abstract class ExperimentSettings {
   double initialVoltage, sampleInterval;
@@ -62,6 +76,7 @@ abstract class ExperimentSettings {
     return true;
   }
 
+  String toBTString();
 
   // Load the data from a file into the object synchronously
   void loadFromFile (File f);
@@ -94,6 +109,11 @@ class AmperometrySettings extends ExperimentSettings {
     return firstRow + secondRow;
   }
   
+
+  @override
+  String toBTString() {
+    return variablesToBTString([runtime, initialVoltage, sampleInterval]);
+  }
   
 
   @override
@@ -133,6 +153,11 @@ class VoltammetrySettings extends ExperimentSettings{
   }
 
 
+  @override
+  String toBTString() {
+    return variablesToBTString([initialVoltage, vertexVoltage, finalVoltage, scanRate]);
+  }
+
 
   // Load the data from a file into the object synchronously
   void loadFromFile (File f){
@@ -147,5 +172,7 @@ class VoltammetrySettings extends ExperimentSettings{
     gainSetting = GainExtension.stringToEnum(fileInfo[6]);
     electrode = Electrode.values.firstWhere((val)=> val.toString().split('.').last == fileInfo[7]);
   }
+
+
 
 }

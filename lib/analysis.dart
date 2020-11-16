@@ -201,6 +201,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   Utf8Decoder dec = Utf8Decoder();
   String incString = "";
   bool isExperimentInProgress = false;
+  bool isRisingVoltage = true;
+  bool clearedPlaceholderR = false;
+  bool clearedPlaceholderL = false;
 
   LineChartBarData dataL;
   LineChartBarData dataR;
@@ -230,14 +233,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return true;
   }
 
+  List<double> parseSweepStatData(String data){
+    data = data.substring(1, data.length - 1); // Remove N and Z
+    List<String> vSplit = data.split('V');
+    List<String> cSplit = vSplit[1].split('C');
+    return [vSplit[0], ...cSplit].map((str)=>double.parse(str)).toList();
+
+  }
+
 
   void onBTDisconnect(BuildContext context){
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text(sweepStatBTConnection.device.name + ' disconnected')));
     setState((){
       sweepStatBTConnection = null;
     });
     isExperimentInProgress = false;
     incString = "";
-    Scaffold.of(context).showSnackBar(SnackBar(content: Text('Bluetooth Disconnected')));
 
   }
 
@@ -248,38 +259,69 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       return;
     }
     String message = dec.convert(intMessage);
-    print(message);
     if (!message.endsWith('}')) {
       incString = message;
       return;
     }
     message = incString + message;
     incString = "";
+    /*
+      TODO: Parse actual data from the SweepStat
+      List<double> data = parseSweepStatData(message);
+      double volt = data[0];
+      double charge = data[1];
+    */
     List<String> parts = message.split(',');
     double volt = double.parse(parts[1].substring(2));
     double charge = double.parse(parts[2].substring(2, parts[2].length - 1));
+    if (isRisingVoltage && volt >= (widget.experiment.settings as VoltammetrySettings).vertexVoltage) isRisingVoltage = false;
     if (mounted) {
       setState(() {
-        widget.experiment.dataL.add(new FlSpot(volt, charge));
+        if (isRisingVoltage) {
+          widget.experiment.dataL.add(new FlSpot(volt, charge));
+          if (!clearedPlaceholderL){
+            widget.experiment.dataL.removeAt(0);
+            clearedPlaceholderL = true;
+          }
+        } else {
+          widget.experiment.dataR.add(new FlSpot(volt, charge));
+          if (!clearedPlaceholderR){
+            widget.experiment.dataR.removeAt(0);
+            clearedPlaceholderR = true;
+          }
+        }
       });
     }
   }
 
   Future<void> bluetooth(BuildContext context) async {
-    if (sweepStatBTConnection == null) {
-      BluetoothDevice device = await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return BlueToothSelection();
-          }) as BluetoothDevice;
-      if (device == null) return;
+    if (isExperimentInProgress){
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Experiment in progress')));
+      return;
+    } else if (sweepStatBTConnection != null){
+      await sweepStatBTConnection.endConnection();
+      setState((){
+        sweepStatBTConnection = null;
+      });
+    }
+
+    BluetoothDevice device = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlueToothSelection();
+    }) as BluetoothDevice;
+    if (device == null) return;
+    try {
       await device.connect();
-      sweepStatBTConnection = await SweepStatBTConnection.createSweepBTConnection(device, ()=>onBTDisconnect(context));
+      SweepStatBTConnection newCon = await SweepStatBTConnection.createSweepBTConnection(device, ()=>onBTDisconnect(context));
       setState(() {
-        sweepStatBTConnection = sweepStatBTConnection;
+        sweepStatBTConnection = newCon;
       });
       await sweepStatBTConnection.addNotifyListener(plotBTPoint);
+    } catch (e) {
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text('BT Error: Did you select the correct device?')));
     }
+
   }
 
   void initState() {
@@ -344,10 +386,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 22.0, bottom: 20),
                   child: LineChart(LineChartData(
-                      maxX: 1,
-                      // widget.experiment.settings.vertexVoltage,
-                      minX: 0,
-                      // widget.experiment.settings.lowVoltage,
+                      maxX: widget.experiment.settings is VoltammetrySettings ? (widget.experiment.settings as VoltammetrySettings).vertexVoltage : 1,
+                      minX: widget.experiment.settings is VoltammetrySettings ? (widget.experiment.settings as VoltammetrySettings).initialVoltage : 0,
                       clipData: FlClipData.all(),
                       lineBarsData: [dataL, dataR],
                       axisTitleData: FlAxisTitleData(
@@ -383,7 +423,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       onPressed: sweepStatBTConnection == null
                           ? null
                           : () async {
-                            if (isExperimentInProgress){
+                            if (widget.experiment is AmperometrySettings) {
+                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('Amperometry not implemented yet')));
+                            } else if (isExperimentInProgress){
                               Scaffold.of(context).showSnackBar(SnackBar(content: Text('Experiment Already in Progress')));
                             } else if ((widget.experiment.dataL.length > 1 || widget.experiment.dataR.length >1) && !await showDialog(
                                 context: context,
@@ -407,9 +449,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                               setState((){
                                 widget.experiment.dataL = [FlSpot(0.0, 0.0)];
                                 widget.experiment.dataR = [FlSpot(0.0, 0.0)];
+                                clearedPlaceholderR = false;
+                                clearedPlaceholderL = false;
+                                isRisingVoltage = true;
                                 dataL = LineChartBarData(spots: widget.experiment.dataL, isCurved: true);
                                 dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent]);
                               });
+                              /*
+                                TODO: Send actual data to the SweepStat
+                                sweepStatBTConnection.writeToSweepStat(widget.experiment.settings.toBTString());
+                              */
                               sweepStatBTConnection.writeToSweepStat('.');
                               isExperimentInProgress = true;
                             }

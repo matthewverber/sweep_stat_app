@@ -21,6 +21,18 @@ class AdvancedSetup extends StatelessWidget {
   }
 }
 
+// Helper functions for checking if correct range
+String voltValid(String num) {
+  double n = double.parse(num);
+  return (n >= -1.5 && n <= 1.5) ? null : "Enter a number between -1.5 and 1.5";
+}
+
+String segmentsValid(String num) {
+  double n = double.parse(num);
+  return n.floor() == n  && n > 0 ? null : "Must be an integer greater than 0";
+}
+
+
 /*
   SetupForm: The main form for entering/validating data
 */
@@ -75,27 +87,33 @@ class _SetupFormState extends State<SetupForm> {
           new ValueInput(
               'Initial Voltage (V)',
               (double d) => {voltammetrySettings.initialVoltage = d},
-              voltammetrySettings.initialVoltage.toString()),
+              voltammetrySettings.initialVoltage.toString(),
+              voltValid),
           new ValueInput(
               'Vertex Voltage (V)',
               (double d) => {voltammetrySettings.vertexVoltage = d},
-              voltammetrySettings.vertexVoltage.toString()),
+              voltammetrySettings.vertexVoltage.toString(),
+              voltValid),
           new ValueInput(
               'Final Voltage (V)',
               (double d) => {voltammetrySettings.finalVoltage = d},
-              voltammetrySettings.finalVoltage.toString()),
+              voltammetrySettings.finalVoltage.toString(),
+              voltValid),
           new ValueInput(
               'Scan Rate (V/s)',
               (double d) => {voltammetrySettings.scanRate = d},
-              voltammetrySettings.scanRate.toString()),
+              voltammetrySettings.scanRate.toString(),
+              null),
           new ValueInput(
               'Sweep Segments',
               (double d) => {voltammetrySettings.sweepSegments = d},
-              voltammetrySettings.sweepSegments.toString()),
+              voltammetrySettings.sweepSegments.toString(),
+              segmentsValid),
           new ValueInput(
               'Sample Interval (V)',
               (double d) => {voltammetrySettings.sampleInterval = d},
-              voltammetrySettings.sampleInterval.toString()),
+              voltammetrySettings.sampleInterval.toString(),
+              null),
           new DropDownInput(
               labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
               values: GainSettings.values.toList(),
@@ -125,15 +143,18 @@ class _SetupFormState extends State<SetupForm> {
           new ValueInput(
               'Initial Voltage (V)',
               (double d) => {amperometrySettings.initialVoltage = d},
-              amperometrySettings.initialVoltage.toString()),
+              amperometrySettings.initialVoltage.toString(),
+              voltValid),
           new ValueInput(
               'Sample Interval (V)',
               (double d) => {amperometrySettings.sampleInterval = d},
-              amperometrySettings.sampleInterval.toString()),
+              amperometrySettings.sampleInterval.toString(),
+              null),
           new ValueInput(
               'Run time (S)',
               (double d) => {amperometrySettings.runtime = d},
-              amperometrySettings.runtime.toString()),
+              amperometrySettings.runtime.toString(),
+              null),
           new DropDownInput(
               labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
               values: GainSettings.values.toList(),
@@ -169,17 +190,17 @@ class _SetupFormState extends State<SetupForm> {
           VoltammetrySettings voltammetrySettings = new VoltammetrySettings();
           inputs = [
             new ValueInput('Initial Voltage (V)',
-                (double d) => {voltammetrySettings.initialVoltage = d}, ''),
+                (double d) => {voltammetrySettings.initialVoltage = d}, '', voltValid),
             new ValueInput('Vertex Voltage (V)',
-                (double d) => {voltammetrySettings.vertexVoltage = d}, ''),
+                (double d) => {voltammetrySettings.vertexVoltage = d}, '', voltValid),
             new ValueInput('Final Voltage (V)',
-                (double d) => {voltammetrySettings.finalVoltage = d}, ''),
+                (double d) => {voltammetrySettings.finalVoltage = d}, '', voltValid),
             new ValueInput('Scan Rate (V/s)',
-                (double d) => {voltammetrySettings.scanRate = d}, ''),
+                (double d) => {voltammetrySettings.scanRate = d}, '', null),
             new ValueInput('Sweep Segments',
-                (double d) => {voltammetrySettings.sweepSegments = d}, ''),
+                (double d) => {voltammetrySettings.sweepSegments = d}, '', segmentsValid),
             new ValueInput('Sample Interval (V)',
-                (double d) => {voltammetrySettings.sampleInterval = d}, ''),
+                (double d) => {voltammetrySettings.sampleInterval = d}, '', null),
             new DropDownInput(
                 labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
                 values: GainSettings.values.toList(),
@@ -205,11 +226,11 @@ class _SetupFormState extends State<SetupForm> {
           AmperometrySettings amperometrySettings = new AmperometrySettings();
           inputs = [
             new ValueInput('Initial Voltage (V)',
-                (double d) => {amperometrySettings.initialVoltage = d}, ''),
+                (double d) => {amperometrySettings.initialVoltage = d}, '', voltValid),
             new ValueInput('Sample Interval (V)',
-                (double d) => {amperometrySettings.sampleInterval = d}, ''),
+                (double d) => {amperometrySettings.sampleInterval = d}, '', null),
             new ValueInput('Run time (S)',
-                (double d) => {amperometrySettings.runtime = d}, ''),
+                (double d) => {amperometrySettings.runtime = d}, '', null),
             new DropDownInput(
                 labelStrings: ['10 nA/V', '1 uA/V', '1 mA/V'],
                 values: GainSettings.values.toList(),
@@ -318,11 +339,9 @@ class _SetupFormState extends State<SetupForm> {
                     flex: 5,
                     child: RaisedButton(
                         onPressed: () {
-                          print('loading');
                           if (_loadVariables()) {
                             Experiment currentExperiment =
                                 new Experiment(experimentSettings);
-                            print('experiment and values loaded');
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (BuildContext context) => AnalysisScreen(
                                       experiment: currentExperiment,
@@ -378,11 +397,11 @@ class _SetupFormState extends State<SetupForm> {
   Calls callback with double of input on formKey.currentState.save()
 */
 class ValueInput extends StatelessWidget {
-  ValueInput(this.text, this.callback, this.value);
+  ValueInput(this.text, this.callback, this.value, this.validator);
 
   final String text,
       value; // Text is displayed name, units is the displayed unit val at end
-  final Function callback; // Callback called on save
+  final Function callback, validator; // Callback called on save
 
   @override
   Widget build(BuildContext context) {
@@ -395,8 +414,12 @@ class ValueInput extends StatelessWidget {
             return 'Please Enter a Value';
           } else {
             try {
-              double.parse(value);
-              return null;
+              if (this.validator != null){
+                return this.validator(value);
+              } else {
+                double.parse(value);
+                return null;
+              }
             } catch (e) {
               return 'Enter a valid number';
             }

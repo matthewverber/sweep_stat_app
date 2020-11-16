@@ -114,12 +114,13 @@ class Experiment {
 
       List<FlSpot> dataL = [];
       List<FlSpot> dataR = [];
-      int midpoint = ((lines.length - startLine)/2).floor() + startLine;
+      bool isRisingVoltage = true;
       for(int i = startLine; i < lines.length; i++){
         double potential = double.parse(lines[i].split(', ').first);
         double current = double.parse(lines[i].split(', ').last);
         FlSpot point = FlSpot(potential, current);
-        if (i < midpoint){
+        if (e.settings is VoltammetrySettings && isRisingVoltage && potential >= (e.settings as VoltammetrySettings).vertexVoltage) isRisingVoltage = false;
+        if (isRisingVoltage){
           dataL.add(point);
         } else {
           dataR.add(point);
