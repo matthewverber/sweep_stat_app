@@ -405,9 +405,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
 //              ExperimentSettingsValues(settings: widget.experiment.settings),
-              Container(
-                height: 100, 
-                child: ListView(scrollDirection: Axis.horizontal, children: [
+              Center(
+                child: Wrap(spacing: 10.0, runSpacing: 6.0, children: [
                   RaisedButton(
                       color: Colors.blue,
                       onPressed: () async {
