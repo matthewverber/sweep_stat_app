@@ -199,12 +199,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   SweepStatBTConnection sweepStatBTConnection;
   Utf8Decoder dec = Utf8Decoder();
-  String incString = "";
   bool isExperimentInProgress = false;
   bool isRisingVoltage = true;
   bool clearedPlaceholderR = false;
   bool clearedPlaceholderL = false;
-
+  String previousPart = "";
   LineChartBarData dataL;
   LineChartBarData dataR;
   Timer callbackTimer;
@@ -234,7 +233,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   List<double> parseSweepStatData(String data){
-    data = data.substring(1, data.length - 1); // Remove N and Z
+    data = data.substring(1);
     List<String> vSplit = data.split('V');
     List<String> cSplit = vSplit[1].split('C');
     return [vSplit[0], ...cSplit].map((str)=>double.parse(str)).toList();
@@ -248,32 +247,17 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       sweepStatBTConnection = null;
     });
     isExperimentInProgress = false;
-    incString = "";
 
   }
 
-  void plotBTPoint(List<int> intMessage) {
-    if (dec.convert(intMessage) == "\$") {
-      isExperimentInProgress = false;
-      incString = "";
-      return;
-    }
-    String message = dec.convert(intMessage);
-    if (!message.endsWith('}')) {
-      incString = message;
-      return;
-    }
-    message = incString + message;
-    incString = "";
-    /*
-      TODO: Parse actual data from the SweepStat
-      List<double> data = parseSweepStatData(message);
-      double volt = data[0];
-      double charge = data[1];
-    */
-    List<String> parts = message.split(',');
+  void plotBTPoint(String message){
+     //TODO: Parse actual data from the SweepStat
+    List<double> data = parseSweepStatData(message);
+    double volt = data[1];
+    double charge = data[2];
+    /*List<String> parts = message.split(',');
     double volt = double.parse(parts[1].substring(2));
-    double charge = double.parse(parts[2].substring(2, parts[2].length - 1));
+    double charge = double.parse(parts[2].substring(2, parts[2].length - 1));*/
     if (isRisingVoltage && volt >= (widget.experiment.settings as VoltammetrySettings).vertexVoltage) isRisingVoltage = false;
     if (mounted) {
       setState(() {
@@ -292,6 +276,30 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         }
       });
     }
+
+  }
+
+  void acceptBTData(List<int> intMessage) {
+    String message = dec.convert(intMessage);
+    if (message == "") return;
+    if (message.contains('Z')){
+      List<String> parts = message.split('Z');
+      if (parts.length > 2){
+        plotBTPoint(previousPart + parts[0]);
+        plotBTPoint(parts[1]);
+        previousPart = parts[2];
+      } else {
+        plotBTPoint(previousPart + parts[0]);
+        previousPart = parts[1];
+      }
+      if (previousPart == '\$') {
+        isExperimentInProgress = false;
+      }
+    } else {
+      previousPart += message;
+      return;
+    }
+   
   }
 
   Future<void> bluetooth(BuildContext context) async {
@@ -317,7 +325,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       setState(() {
         sweepStatBTConnection = newCon;
       });
-      await sweepStatBTConnection.addNotifyListener(plotBTPoint);
+      await sweepStatBTConnection.addNotifyListener(acceptBTData);
     } catch (e) {
       Scaffold.of(context).showSnackBar(SnackBar(content: Text('BT Error: Did you select the correct device?')));
     }
@@ -353,7 +361,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   await sweepStatBTConnection.endConnection();
                   print('ended con');
                 }
-                print('popping');
                 Navigator.of(context).pop();
               },
             ),
@@ -452,14 +459,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                 clearedPlaceholderR = false;
                                 clearedPlaceholderL = false;
                                 isRisingVoltage = true;
+                                previousPart = "";
                                 dataL = LineChartBarData(spots: widget.experiment.dataL, isCurved: true, dotData: FlDotData(show: false));
                                 dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent], dotData: FlDotData(show: false));
                               });
-                              /*
-                                TODO: Send actual data to the SweepStat
-                                sweepStatBTConnection.writeToSweepStat(widget.experiment.settings.toBTString());
-                              */
-                              sweepStatBTConnection.writeToSweepStat('.');
+
+                              sweepStatBTConnection.writeToSweepStat(widget.experiment.settings.toBTString());
+                              //sweepStatBTConnection.writeToSweepStat('.');
                               isExperimentInProgress = true;
                             }
                       })
