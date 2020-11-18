@@ -57,6 +57,7 @@ There are two ways to run the app locally:
 ### Warranty
 
 Instructions verified to work on Windows 10 by Jake Ryan on 11/9/2020
+Verified on macOS Catalina 10.15.7 by Braden Goodwin on 11/18/2020
 
 
 ## Testing 
