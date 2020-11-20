@@ -58,8 +58,9 @@ class SweepStatBTConnection {
             }
           }
       }
-
     }
+
+    print('services found');
     // Make characteristic exists
     if (sweepConnection.characteristic == null) return null;
     

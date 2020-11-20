@@ -206,7 +206,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   String previousPart = "";
   LineChartBarData dataL;
   LineChartBarData dataR;
-  Timer callbackTimer;
+  Timer expTimeout;
 
   Future<bool> saveLocally(String fileName) async {
     return await widget.experiment.saveExperiment(fileName);
@@ -293,6 +293,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         previousPart = parts[1];
       }
       if (previousPart == '\$') {
+        if (expTimeout != null) {
+          expTimeout.cancel();
+          expTimeout = null;
+        }
         isExperimentInProgress = false;
       }
     } else {
@@ -322,6 +326,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     try {
       await device.connect();
       SweepStatBTConnection newCon = await SweepStatBTConnection.createSweepBTConnection(device, ()=>onBTDisconnect(context));
+      if (newCon == null){
+        print('null conn');
+        return;
+      }
       setState(() {
         sweepStatBTConnection = newCon;
       });
@@ -344,8 +352,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   void dispose() {
     super.dispose();
-    if (callbackTimer != null) {
-      callbackTimer.cancel();
+    if (expTimeout != null) {
+      expTimeout.cancel();
     }
   }
 
@@ -463,10 +471,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                 dataL = LineChartBarData(spots: widget.experiment.dataL, isCurved: true, dotData: FlDotData(show: false));
                                 dataR = LineChartBarData(spots: widget.experiment.dataR, isCurved: true, curveSmoothness: .1, colors: [Colors.blueAccent], dotData: FlDotData(show: false));
                               });
+                              print('state set');
+                              expTimeout = Timer(Duration(seconds: 5), (){
+                                if (widget.experiment.dataL.length == 1 && widget.experiment.dataR.length == 1){
+                                  Scaffold.of(context).showSnackBar(SnackBar(content: Text('Experiment Timeout, Please Retry')));
+                                  isExperimentInProgress = false;
 
+                                } 
+                                expTimeout = null;
+                              });
                               sweepStatBTConnection.writeToSweepStat(widget.experiment.settings.toBTString());
                               //sweepStatBTConnection.writeToSweepStat('.');
                               isExperimentInProgress = true;
+                              print('sent bt');
                             }
                       })
                   ),
