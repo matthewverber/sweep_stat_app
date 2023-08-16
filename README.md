@@ -127,7 +127,7 @@ For more information, see our project site for the Fall 2020 semester:
 
 Jake Ryan: [https://github.com/jake612](https://github.com/jake612) 
 
-Braden Goodwin: [https://github.com/bradengoodwin](https://github.com/bradengoodwin)
+Braden Goodwin: [https://github.com/bradentg](https://github.com/bradentg)
 
 Matthew Byrd: [https://github.com/ByrdOfAFeather](https://github.com/ByrdOfAFeather) 
 
